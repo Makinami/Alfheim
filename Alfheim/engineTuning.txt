@@ -1,0 +1,16 @@
+   Display Frame Rate:  on
+   Display Performace Graph:  on
+   Display Profiler:  on
+   + Graphics ...
+        + Display ...
+             Bicubic Filter Weight:  -0.750000
+             Magnify Pixels:  Off
+             Native Resolution:  1920x1080
+             Sharpness Sample Rotation:  45.000000
+             Sharpness Sample Spread:  1.000000
+             Sharpness Strength:  0.100000
+             Upsample Filter:  Sharpening
+   + Timing ...
+        Drop Random Frames:  off
+        Limit To 30Hz:  off
+        VSync:  on
