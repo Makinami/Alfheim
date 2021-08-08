@@ -29,7 +29,11 @@ namespace DirectX
 	auto operator ==(const DirectX::XMFLOAT3& a, const DirectX::XMFLOAT3& b) noexcept
 	{
 		return a.x == b.x && a.y == b.y && a.z == b.z;
-		//return a.x != b.x ? a.x <=> b.x : (a.y != b.y ? a.y <=> b.y : a.z <=> b.z); // three-way comparison not detected by std::find
+
+		// non-default spaceship operator does not generate comparison operator
+		// https://stackoverflow.com/a/58780963/2551034
+		// operator overloaded outside the class can't be defaulted
+		//return a.x != b.x ? a.x <=> b.x : (a.y != b.y ? a.y <=> b.y : a.z <=> b.z);
 	}
 }
 
@@ -42,7 +46,9 @@ auto append_unique(Container& container, const Value& value) -> typename Contain
 		return it;
 }
 
-auto GenerateSphereMesh(int lod = 0) -> std::pair<std::vector<VertexData>, std::vector<int>>
+// Generate sphere by bisecting icosahedron `lod` time.
+// Returns icosahedron by default
+[[nodiscard]] constexpr auto GenerateSphereMesh(int lod = 0) -> std::pair<std::vector<VertexData>, std::vector<int>>
 {
 	using namespace Math;
 
@@ -127,7 +133,8 @@ auto GenerateSphereMesh(int lod = 0) -> std::pair<std::vector<VertexData>, std::
 	return { vertexData, indices };
 }
 
-[[nodiscard]] auto GenerateCubeMesh() -> std::pair<std::vector<VertexData>, std::vector<int>>
+// outward facing cube
+[[nodiscard]] constexpr auto GenerateCubeMesh() -> std::pair<std::vector<VertexData>, std::vector<int>>
 {
 	auto vertices = std::vector{
 		VertexData{ XMFLOAT3(0, 0, 0), XMFLOAT3(-1, 0, 0) },
@@ -162,18 +169,19 @@ auto GenerateSphereMesh(int lod = 0) -> std::pair<std::vector<VertexData>, std::
 	};
 
 	auto indices = std::vector{
-		0, 1, 2,  1, 2, 3,
-		4, 5, 6,  5, 6, 7,
-		8, 9, 10,  9, 10, 11,
-		12, 13, 14,  13, 14, 15,
-		16, 17, 18,  17, 18, 19,
-		20, 21, 22,  21, 22, 23
+		0, 2, 1,  1, 2, 3,
+		4, 5, 6,  5, 7, 6,
+		8, 9, 10,  9, 11, 10,
+		12, 14, 13,  13, 14, 15,
+		16, 18, 17,  17, 18, 19,
+		20, 21, 22,  21, 23, 22
 	};
 
 	return { vertices, indices };
 }
 
-auto GeneratePlaneMesh() -> std::pair<std::vector<VertexData>, std::vector<int>>
+// Generate XY plane facing positice Z direction
+[[nodiscard]] constexpr auto GeneratePlaneMesh() -> std::pair<std::vector<VertexData>, std::vector<int>>
 {
 	return {
 		{
@@ -220,27 +228,12 @@ void PrimitiveRenderer::Initialize()
 	m_WireframePSO.Finalize();
 
 	MeshBufferPacker<VertexData> packer;
-	m_Foos[0] = packer.Push(GenerateSphereMesh(1));
-	m_Foos[1] = packer.Push(GenerateCubeMesh());
-	m_Foos[2] = packer.Push(GeneratePlaneMesh());
+	m_PrimitivesIndices[0] = packer.Push(GenerateSphereMesh(1));
+	m_PrimitivesIndices[1] = packer.Push(GenerateCubeMesh());
+	m_PrimitivesIndices[2] = packer.Push(GeneratePlaneMesh());
 	packer.Finalize(L"Primitives", m_VertexBuffer, m_IndexBuffer);
 
 	m_InstanceBuffer.Create(L"Sphere instance buffer", max_instances);
-
-	QueueSphere({ 0, 2, 0 }, 2.f);
-	QueuePlane({ -2, 0, -2 }, { 4, 0, 0 }, { 0, 0, 4 });
-
-	m_Viewport.TopLeftX = 0;
-	m_Viewport.TopLeftY = 0;
-	m_Viewport.Width = static_cast<float>(Graphics::g_SceneColorBuffer.GetWidth());
-	m_Viewport.Height = static_cast<float>(Graphics::g_SceneColorBuffer.GetHeight());
-	m_Viewport.MinDepth = 0.f;
-	m_Viewport.MaxDepth = 1.f;
-
-	m_Scissor.left = 0;
-	m_Scissor.top = 0;
-	m_Scissor.right = static_cast<LONG>(Graphics::g_SceneColorBuffer.GetWidth());
-	m_Scissor.bottom = static_cast<LONG>(Graphics::g_SceneColorBuffer.GetHeight());
 }
 
 void PrimitiveRenderer::Render(GraphicsContext& gfxContext, const Math::Camera& camera)
@@ -257,7 +250,7 @@ void PrimitiveRenderer::Render(GraphicsContext& gfxContext, const Math::Camera& 
 	gfxContext.SetVertexBuffer(0, m_VertexBuffer.VertexBufferView());
 
 	gfxContext.SetPipelineState(m_SurfacePSO);
-	gfxContext.SetViewportAndScissor(m_Viewport, m_Scissor);
+	gfxContext.SetViewportAndScissor(0, 0, Graphics::g_SceneColorBuffer.GetWidth(), Graphics::g_SceneColorBuffer.GetHeight());
 
 	__declspec(align(16)) struct {
 		XMFLOAT4X4 viewProjMatrix;
@@ -277,7 +270,7 @@ void PrimitiveRenderer::Render(GraphicsContext& gfxContext, const Math::Camera& 
 
 		ASSERT(instance + queue.size() < max_instances, "Run out of primitives' instance buffer");
 		memcpy(&m_InstanceBuffer[instance], queue.data(), queue.size() * sizeof(InstanceData));
-		gfxContext.DrawIndexedInstanced(m_Foos[type].IndexCount, queue.size(), m_Foos[type].StartIndexLocation, m_Foos[type].BaseVertexLocation, instance);
+		gfxContext.DrawIndexedInstanced(m_PrimitivesIndices[type].IndexCount, queue.size(), m_PrimitivesIndices[type].StartIndexLocation, m_PrimitivesIndices[type].BaseVertexLocation, instance);
 		instance += queue.size();
 	}
 }

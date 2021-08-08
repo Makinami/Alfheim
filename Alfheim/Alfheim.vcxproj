@@ -21,7 +21,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <EnableASAN>false</EnableASAN>
   </PropertyGroup>
@@ -114,6 +114,7 @@
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="PrimitiveRenderer.cpp" />
+    <ClCompile Include="TallCells.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.vcxproj">
@@ -127,6 +128,7 @@
   <ItemGroup>
     <ClInclude Include="MeshBufferPacker.h" />
     <ClInclude Include="PrimitiveRenderer.h" />
+    <ClInclude Include="TallCells.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\PrimitivePS.hlsl">

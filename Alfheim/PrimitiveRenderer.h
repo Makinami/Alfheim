@@ -39,7 +39,7 @@ public:
 	}
 	void QueueCuboid(const Math::Vector3& Min, const Math::Vector3& Max)
 	{
-		QueuePrimitive(PrimitiveType::kCuboid, DirectX::XMMatrixTranslationFromVector(Min) * DirectX::XMMatrixScalingFromVector(Max - Min));
+		QueuePrimitive(PrimitiveType::kCuboid, DirectX::XMMatrixScalingFromVector(Max - Min) * DirectX::XMMatrixTranslationFromVector(Min));
 	}
 	void QueuePlane(const Math::Vector3& Origin, const Math::Vector3& UAxis, const Math::Vector3& VAxis)
 	{
@@ -71,13 +71,10 @@ private:
 	StructuredBuffer m_VertexBuffer;
 	ByteAddressBuffer m_IndexBuffer;
 	
-	std::array<Foo, sm_PrimitiveTypesCount> m_Foos;
+	std::array<Foo, sm_PrimitiveTypesCount> m_PrimitivesIndices;
 
 	std::array<std::vector<InstanceData>, sm_PrimitiveTypesCount> m_PrimitiveQueues;
 
 	StructuredUploadBuffer<InstanceData> m_InstanceBuffer;
-
-	D3D12_VIEWPORT m_Viewport;
-	D3D12_RECT m_Scissor;
 };
 

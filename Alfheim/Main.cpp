@@ -35,6 +35,10 @@ void Alfheim::Startup(void)
 	m_CameraController->SetMovementSpeed(50.f);
 
 	m_PrimitiveRenderer.Initialize();
+
+	m_PrimitiveRenderer.QueuePlane({ -2, -1, -2 }, { 4, 0, 0 }, { 0, 0, 4 });
+	m_PrimitiveRenderer.QueueCuboid({ -1,-1,-1 }, { 1,0,1 });
+	m_PrimitiveRenderer.QueueSphere({ 0, 1, 0 }, 1.f);
 }
 
 void Alfheim::Update([[maybe_unused]] float deltaT)
