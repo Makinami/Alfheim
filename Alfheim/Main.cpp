@@ -1,10 +1,11 @@
 #include "pch.h"
 #include "GameCore.h"
-#include	 "Camera.h"
+#include "Camera.h"
 #include "CameraController.h"
 #include "BufferManager.h"
 
 #include "PrimitiveRenderer.h"
+#include "Water.h"
 
 using namespace GameCore;
 
@@ -24,22 +25,27 @@ private:
 	std::unique_ptr<CameraController> m_CameraController;
 
 	PrimitiveRenderer m_PrimitiveRenderer;
+	Water m_Water;
 };
 
 CREATE_APPLICATION( Alfheim )
 
 void Alfheim::Startup(void)
 {
-	m_Camera.SetEyeAtUp({ 10.f, 0.f, 0.f }, { 0.f, 0.f, 0.f }, { 0.f, 1.f, 0.f });
+	m_Camera.SetEyeAtUp({ 10.f, 10.f, 0.f }, { 0.f, 0.f, 0.f }, { 0.f, 1.f, 0.f });
 	m_CameraController = std::make_unique<CameraController>(m_Camera, Math::Vector3(Math::kYUnitVector));
 	m_CameraController->SetMovementSpeed(50.f);
 
-	m_PrimitiveRenderer.Initialize();
+	//m_PrimitiveRenderer.Initialize();
+
+	m_Water.Initialize();
 }
 
 void Alfheim::Update([[maybe_unused]] float deltaT)
 {
 	m_CameraController->Update(deltaT);
+
+	m_Water.Update(deltaT);
 }
 
 void Alfheim::RenderScene(void)
@@ -53,7 +59,7 @@ void Alfheim::RenderScene(void)
 
 	gfxContext.SetRenderTarget(Graphics::g_SceneColorBuffer.GetRTV(), Graphics::g_SceneDepthBuffer.GetDSV());
 
-	m_PrimitiveRenderer.Render(gfxContext, m_Camera);
+	m_Water.Render(gfxContext, m_Camera);
 
 	gfxContext.Finish();
 }
