@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #include "GpuResource.h"
 
 class PixelBuffer : public GpuResource

@@ -38,6 +38,11 @@ public:
 		m_GraphicsHandleCache.ParseRootSignature(m_DescriptorType, RootSig);
 	}
 
+	void ParseComputeRootSignature(const RootSignature& RootSig)
+	{
+		m_ComputeHandleCache.ParseRootSignature(m_DescriptorType, RootSig);
+	}
+
 	inline void CommitGraphicsRootDescriptorTables(ID3D12GraphicsCommandList* CmdList)
 	{
 		if (m_GraphicsHandleCache.m_StaleRootParamsBitMap != 0)

@@ -59,6 +59,16 @@ CommandContext& CommandContext::Begin(const std::wstring ID)
 	return *NewContext;
 }
 
+ComputeContext& ComputeContext::Begin(const std::wstring& ID, bool Async)
+{
+	ComputeContext& NewContext = g_ContextManager.AllocateContext(
+		Async ? D3D12_COMMAND_LIST_TYPE_COMPUTE : D3D12_COMMAND_LIST_TYPE_DIRECT)->GetComputeContext();
+	NewContext.SetID(ID);
+	if (ID.length() > 0)
+		EngineProfiling::BeginBlock(ID, &NewContext);
+	return NewContext;
+}
+
 void CommandContext::Initialize(void)
 {
 	g_CommandManager.CreateNewCommandList(m_Type, &m_CommandList, &m_CurrentAllocator);

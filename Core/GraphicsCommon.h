@@ -5,6 +5,8 @@ class CommandSignature;
 
 namespace Graphics
 {
+	extern SamplerDesc SamplerLinearWrapDesc;
+	extern SamplerDesc SamplerAnisoWrapDesc;
 	extern SamplerDesc SamplerLinearClampDesc;
 	extern SamplerDesc SamplerPointClampDesc;
 

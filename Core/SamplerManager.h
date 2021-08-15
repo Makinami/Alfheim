@@ -40,4 +40,10 @@ public:
 		BorderColor[2] = Border.B();
 		BorderColor[3] = Border.A();
 	}
+
+	// Allocate new descriptor as needed; return handle to existing descriptor when possible
+	D3D12_CPU_DESCRIPTOR_HANDLE CreateDescriptor();
+
+	// Create descriptor in-place (no deduplication)
+	void CreateDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE& Handle);
 };

@@ -4,8 +4,15 @@
 
 namespace Graphics
 {
+	SamplerDesc SamplerLinearWrapDesc;
+	SamplerDesc SamplerAnisoWrapDesc;
 	SamplerDesc SamplerLinearClampDesc;
 	SamplerDesc SamplerPointClampDesc;
+
+	D3D12_CPU_DESCRIPTOR_HANDLE SamplerLinearWrap;
+	D3D12_CPU_DESCRIPTOR_HANDLE SamplerAnisoWrap;
+	D3D12_CPU_DESCRIPTOR_HANDLE SamplerLinearClamp;
+	D3D12_CPU_DESCRIPTOR_HANDLE SamplerPointClamp;
 
 	D3D12_RASTERIZER_DESC RasterizerDefault;
 	D3D12_RASTERIZER_DESC RasterizerTwoSided;
@@ -24,11 +31,19 @@ namespace Graphics
 
 void Graphics::InitializeCommonState(void)
 {
+	SamplerLinearWrapDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+	SamplerLinearWrap = SamplerLinearWrapDesc.CreateDescriptor();
+
+	SamplerAnisoWrapDesc.MaxAnisotropy = 4;
+	SamplerAnisoWrap = SamplerAnisoWrapDesc.CreateDescriptor();
+
 	SamplerLinearClampDesc.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
 	SamplerLinearClampDesc.SetTextureAddressMode(D3D12_TEXTURE_ADDRESS_MODE_CLAMP);
+	SamplerLinearClamp = SamplerLinearClampDesc.CreateDescriptor();
 	
 	SamplerPointClampDesc.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT;
 	SamplerPointClampDesc.SetTextureAddressMode(D3D12_TEXTURE_ADDRESS_MODE_CLAMP);
+	SamplerPointClamp = SamplerPointClampDesc.CreateDescriptor();
 
 	// Default rasterizer states
 	RasterizerDefault.FillMode = D3D12_FILL_MODE_SOLID;

@@ -2,6 +2,8 @@
 
 #include <DirectXMath.h>
 
+#include "Math/Common.h"
+
 class Color
 {
 public:
