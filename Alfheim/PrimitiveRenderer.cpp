@@ -225,10 +225,7 @@ void PrimitiveRenderer::Initialize()
 	m_Foos[2] = packer.Push(GeneratePlaneMesh());
 	packer.Finalize(L"Primitives", m_VertexBuffer, m_IndexBuffer);
 
-	m_InstanceBuffer.Create(L"Sphere instance buffer", max_instances);
-
-	QueueSphere({ 0, 2, 0 }, 2.f);
-	QueuePlane({ -2, 0, -2 }, { 4, 0, 0 }, { 0, 0, 4 });
+	m_InstanceBuffer.Create(L"Primitives instance buffer", max_instances);
 
 	m_Viewport.TopLeftX = 0;
 	m_Viewport.TopLeftY = 0;

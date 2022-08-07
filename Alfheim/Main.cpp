@@ -1,10 +1,11 @@
 #include "pch.h"
 #include "GameCore.h"
-#include	 "Camera.h"
+#include "Camera.h"
 #include "CameraController.h"
 #include "BufferManager.h"
 
 #include "PrimitiveRenderer.h"
+#include "Sky.h"
 
 using namespace GameCore;
 
@@ -24,6 +25,7 @@ private:
 	std::unique_ptr<CameraController> m_CameraController;
 
 	PrimitiveRenderer m_PrimitiveRenderer;
+	Sky m_Sky;
 };
 
 CREATE_APPLICATION( Alfheim )
@@ -35,11 +37,13 @@ void Alfheim::Startup(void)
 	m_CameraController->SetMovementSpeed(50.f);
 
 	m_PrimitiveRenderer.Initialize();
+	m_Sky.Initialize();
 }
 
 void Alfheim::Update([[maybe_unused]] float deltaT)
 {
 	m_CameraController->Update(deltaT);
+	m_Sky.Precompute();
 }
 
 void Alfheim::RenderScene(void)

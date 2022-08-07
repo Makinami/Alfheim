@@ -30,6 +30,7 @@
 #include <memory>
 
 #include <fmt/format.h>
+#include <fmt/xchar.h>
 
 #include <wrl.h>
 #include <ppltasks.h>

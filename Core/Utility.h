@@ -4,7 +4,7 @@
 
 namespace Utility
 {
-    inline void Print(const char* msg) { fmt::print("{}", msg); }
+    inline void Print(const char* msg) { fmt::print(FMT_STRING("{}"), msg); }
     inline void Print(const wchar_t* msg) { fmt::print(L"{}", msg); }
 
     template <typename ...Args>
@@ -32,7 +32,7 @@ namespace Utility
     inline void PrintSubMessage(const wchar_t* format, Args... args)
     {
         fmt::print("--> ");
-        fmt::print(format, args...);
+        fmt::vprint(format, fmt::make_wformat_args(args...));
         fmt::print("\n");
     }
 

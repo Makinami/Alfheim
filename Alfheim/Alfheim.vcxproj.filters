@@ -24,10 +24,16 @@
     <ClCompile Include="PrimitiveRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Sky.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="Shaders\PrimitiveRS.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\SkyH.hlsli">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
@@ -38,12 +44,24 @@
     <ClInclude Include="MeshBufferPacker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Sky.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\PrimitiveVS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\PrimitivePS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\TransmittanceCS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\IrradianceSingleCS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\InscatterSingleCS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

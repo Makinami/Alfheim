@@ -14,13 +14,16 @@ public:
 		std::memset(m_UAVHandle, 0xFF, sizeof(m_UAVHandle));
 	}
 
-	void Create(const std::wstring& Name, uint32_t Width, uint32_t Height, uint32_t NumMips,
+	void Init(const std::wstring& Name, uint32_t Width, uint32_t Height, uint32_t NumMips,
 		DXGI_FORMAT Format, D3D12_GPU_VIRTUAL_ADDRESS VidMemPtr = D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN);
 
-	void CreateArray(const std::wstring& Name, uint32_t Width, uint32_t Height, uint32_t ArrayCount,
+	void Init3D(const std::wstring& Name, uint32_t Width, uint32_t Height, uint32_t Depth,
 		DXGI_FORMAT Format, D3D12_GPU_VIRTUAL_ADDRESS VidMemPtr = D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN);
 
-	void CreateFromSwapChain(const std::wstring& Name, ID3D12Resource* BaseResource);
+	void InitArray(const std::wstring& Name, uint32_t Width, uint32_t Height, uint32_t ArrayCount,
+		DXGI_FORMAT Format, D3D12_GPU_VIRTUAL_ADDRESS VidMemPtr = D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN);
+
+	void InitFromSwapChain(const std::wstring& Name, ID3D12Resource* BaseResource);
 
 	const D3D12_CPU_DESCRIPTOR_HANDLE& GetSRV(void) const { return m_SRVHandle; }
 	const D3D12_CPU_DESCRIPTOR_HANDLE& GetRTV(void) const { return m_RTVHandle; }
@@ -45,6 +48,7 @@ protected:
 		return HighBit + 1;
 	}
 
+	void CreateDerivedViews(ID3D12Device* Device, const D3D12_RESOURCE_DESC& desc);
 	void CreateDerivedViews(ID3D12Device* Device, DXGI_FORMAT Format, uint32_t ArraySize, uint32_t NumMips = 1);
 
 	Color m_ClearColor;

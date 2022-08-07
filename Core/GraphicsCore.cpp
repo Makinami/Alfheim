@@ -229,8 +229,8 @@ void Graphics::Initialize(void)
 
 		WARN_ONCE_IF_NOT(DeveloperModeEnabled, "Enabled Developer Mode on Windows 10 to get consistent profiling results");
 
-		/*if (DeveloperModeEnabled)
-			g_Device->SetStablePowerState(TRUE);*/
+		if (DeveloperModeEnabled)
+			g_Device->SetStablePowerState(TRUE);
 	}
 #endif // !RELEASE
 
@@ -331,7 +331,7 @@ void Graphics::Initialize(void)
 	{
 		ComPtr<ID3D12Resource> DisplayPlane;
 		ASSERT_SUCCEEDED(s_SwapChain1->GetBuffer(i, IID_PPV_ARGS(&DisplayPlane)));
-		g_DisplayPlane[i].CreateFromSwapChain(L"Primary SwapChain Buffer", DisplayPlane.Detach());
+		g_DisplayPlane[i].InitFromSwapChain(L"Primary SwapChain Buffer", DisplayPlane.Detach());
 	}
 
 	InitializeCommonState();
@@ -382,7 +382,7 @@ void Graphics::Initialize(void)
 
 	//!
 
-	g_PreDisplayBuffer.Create(L"PreDisplay Buffer", g_DisplayWidth, g_DisplayHeight, 1, SwapChainFormat);
+	g_PreDisplayBuffer.Init(L"PreDisplay Buffer", g_DisplayWidth, g_DisplayHeight, 1, SwapChainFormat);
 
 	GpuTimeManager::Initialize(4096);
 	SetNativeResolution();
@@ -411,7 +411,7 @@ void Graphics::Resize(uint32_t width, uint32_t height)
 
 	DEBUGPRINT("Changing display resolution to {}x{}", width, height);
 
-	g_PreDisplayBuffer.Create(L"PreDisplay Buffer", width, height, 1, SwapChainFormat);
+	g_PreDisplayBuffer.Init(L"PreDisplay Buffer", width, height, 1, SwapChainFormat);
 
 	for (uint32_t i = 0; i < SWAP_CHAIN_BUFFER_COUNT; ++i)
 		g_DisplayPlane[i].Destroy();
@@ -422,7 +422,7 @@ void Graphics::Resize(uint32_t width, uint32_t height)
 	{
 		ComPtr<ID3D12Resource> DisplayPlane;
 		ASSERT_SUCCEEDED(s_SwapChain1->GetBuffer(i, IID_PPV_ARGS(&DisplayPlane)));
-		g_DisplayPlane[i].CreateFromSwapChain(L"Primary SwapChain Buffer", DisplayPlane.Detach());
+		g_DisplayPlane[i].InitFromSwapChain(L"Primary SwapChain Buffer", DisplayPlane.Detach());
 	}
 
 	g_CurrentBuffer = 0;

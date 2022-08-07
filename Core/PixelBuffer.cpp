@@ -23,6 +23,28 @@ D3D12_RESOURCE_DESC PixelBuffer::DescribeTex2D(uint32_t Width, uint32_t Height, 
 	return Desc;
 }
 
+D3D12_RESOURCE_DESC PixelBuffer::DescribeTex3D(uint32_t Width, uint32_t Height, uint32_t Depth, DXGI_FORMAT Format, UINT Flags)
+{
+    m_Width = Width;
+    m_Height = Height;
+    m_ArraySize = Depth;
+    m_Format = Format;
+
+    D3D12_RESOURCE_DESC Desc = {};
+    Desc.Alignment = 0;
+    Desc.DepthOrArraySize = (UINT16)Depth;
+    Desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
+    Desc.Flags = (D3D12_RESOURCE_FLAGS)Flags;
+    Desc.Format = GetBaseFormat(Format);
+    Desc.Height = (UINT)Height;
+    Desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    Desc.MipLevels = 1;
+    Desc.SampleDesc.Count = 1;
+    Desc.SampleDesc.Quality = 0;
+    Desc.Width = (UINT64)Width;
+    return Desc;
+}
+
 void PixelBuffer::AssociateWithResource([[maybe_unused]] ID3D12Device* Device, [[maybe_unused]] const std::wstring& Name, ID3D12Resource* Resource, D3D12_RESOURCE_STATES CurrentState)
 {
 	ASSERT(Resource != nullptr);
