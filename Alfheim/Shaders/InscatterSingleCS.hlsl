@@ -40,4 +40,5 @@ void main(uint3 DTid : SV_DispatchThreadID)
 	float3 rayleigh, mie;
 	ComputeSingleScattering(r, mu, mu_s, nu, intersects_ground, rayleigh, mie);
 	RWDeltaInscatter[DTid] = float4(rayleigh, mie.r);
+	RWInscatter[DTid] = float4(rayleigh, mie.r);
 }

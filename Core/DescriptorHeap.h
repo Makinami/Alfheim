@@ -52,8 +52,9 @@ public:
 			m_GpuHandle.ptr += OffsetScaledByDescriptorSize;
 	}
 
-	D3D12_CPU_DESCRIPTOR_HANDLE GetCpuHandle() const { return m_CpuHandle; }
-	D3D12_GPU_DESCRIPTOR_HANDLE GetGpuHandle() const { return m_GpuHandle; }
+	const D3D12_CPU_DESCRIPTOR_HANDLE* operator&() const { return &m_CpuHandle; }
+	operator D3D12_CPU_DESCRIPTOR_HANDLE() const { return m_CpuHandle; }
+	operator D3D12_GPU_DESCRIPTOR_HANDLE() const { return m_GpuHandle; }
 
 	bool IsNull() const { return m_CpuHandle.ptr == D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN; }
 	bool IsShaderVisible() const { return m_GpuHandle.ptr != D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN; }

@@ -1,8 +1,16 @@
 RWTexture2D<float3> RWTransmittance : register(u0);
-RWTexture2D<float3> RWDeltaIrradiance : register(u1);
-RWTexture3D<float4> RWDeltaInscatter : register(u2);
+RWTexture2D<float3> RWIrradiance : register(u1);
+RWTexture2D<float3> RWDeltaIrradiance : register(u2);
+RWTexture3D<float4> RWInscatter : register(u3);
+RWTexture3D<float4> RWDeltaInscatter : register(u4);
+RWTexture3D<float4> RWDeltaJ : register(u5);
 
 Texture2D<float3> ROTransmittance : register(t0);
+Texture2D<float4> ROIrradiance : register(t1);
+Texture2D<float3> RODeltaIrradiance : register(t2);
+Texture3D<float4> ROInscatter : register(t3);
+Texture3D<float4> RODeltaInscatter : register(t4);
+Texture3D<float4> RODeltaJ : register(t5);
 
 SamplerState LinearClamp : register(s0);
 
@@ -25,6 +33,11 @@ cbuffer SkyParameters : register(b0)
     float BottomRadius;
 }
 
+cbuffer OrderConstant : register(b1)
+{
+    int Order;
+}
+
 /*
     To be moved to the program
 */
@@ -38,13 +51,15 @@ static const float MinimumMuS = -0.2;
 static const float3 SolarIrradiance = float3(1.5, 1.5, 1.5); // for now (see the reference)
 static const float SunAngularRadius = 0.2678;
 static const float3 MieScattering = float3(4e-3, 4e-3, 4e-3);
+static const float3 GroundAlbedo = 0.1;
+static const float MiePhaseFunctionG = 0.2;
 
 /*
     Numerical integration parameters
 */
 
 static const int TRANSMITTANCE_INTEGRAL_SAMPLES = 500;
-static const int INSCATTER_INTEGRAL_SAMPLES = 5;
+static const int INSCATTER_INTEGRAL_SAMPLES = 50;
 static const int IRRADIANCE_INTEGRAL_SAMPLES = 32;
 static const int INSCATTER_SPHERICAL_INTEGRAL_SAMPLES = 16;
 
@@ -110,10 +125,17 @@ float2 GetTransmittanceUV(float alt, float vzAngle)
     return foo;
 }
 
-void GetIrradianceAltSzAngle(float2 pos, out float alt, out float szAngle)
+void GetIrradianceAltSzAngle(int2 pos, out float alt, out float szAngle)
 {
     alt = BottomRadius + pos.y / (SkyRes.y - 1.f) * (TopRadius - BottomRadius);
     szAngle = -0.2f + pos.x / (SkyRes.x - 1.f) * 1.2f;
+}
+
+float2 GetIrradianceTextureUvFromAltSzAngle(float alt, float szAngle)
+{
+    float x_r = (alt - BottomRadius) / (TopRadius - BottomRadius);
+    float x_mu_s = szAngle * 0.5 + 0.5;
+    return float2(x_mu_s, x_r);
 }
 
 void GetRMuMuSNuFromScatteringTextureUvwz(float4 pos, out float r, out float mu, out float mu_s, out float nu, out bool intersects_ground)
@@ -168,25 +190,75 @@ void GetRMuMuSNuFromScatteringTextureCoordinates(int3 pos, out float r, out floa
     nu = clamp(nu, mu * mu_s - dSqrt, mu * mu_s + dSqrt);
 }
 
+float4 GetScatteringTextureUvwzFromRMuMuSNu(float r, float mu, float mu_s, float nu, bool intersects_ground)
+{
+    // Distance to top atmosphere for a horizontal ray at ground level.
+    float H = sqrt(TopRadius * TopRadius - BottomRadius * BottomRadius);
+    // Distance to the horizon.
+    float rho = sqrt(max(0, r * r - BottomRadius * BottomRadius));
+    float u_r = TextureCoordinatesFromUnitRange(rho / H, ScatteringRes.x);
+
+    // Distance of the quadratic equation for the intersections of the ray
+    // (r, mu) with the ground.
+    float r_mu = r * mu;
+    float discriminant = r_mu * r_mu - r * r + BottomRadius * BottomRadius;
+    float u_mu;
+    if (intersects_ground) {
+        // Distance to the ground for the ray (r,mu), and its minimum and maximum
+        // values over all mu - obtained for (r,-1) and (r,mu_horizon).
+        float d = -r_mu - sqrt(max(0, discriminant));
+        float d_min = r - BottomRadius;
+        float d_max = rho;
+        u_mu = 0.5 - 0.5 * TextureCoordinatesFromUnitRange(d_max == d_min ? 0.0 :
+            (d - d_min) / (d_max - d_min), ScatteringRes.y / 2);
+    }
+    else {
+        // Distance to the top atmosphere boundary for the ray (r, mu), and its
+        // minimum and maximum values over all mu - obtained for (r,1) and
+        // (r,mu_horizon).
+        float d = -r_mu + sqrt(max(0, discriminant + H * H));
+        float d_min = TopRadius - r;
+        float d_max = rho + H;
+        u_mu = 0.5 + 0.5 * TextureCoordinatesFromUnitRange((d - d_min) / (d_max - d_min), ScatteringRes.y / 2);
+    }
+
+    float d = DistanceToTopAtmosphereBoundary(BottomRadius, mu_s);
+    float d_min = TopRadius - BottomRadius;
+    float d_max = H;
+    float a = (d - d_min) / (d_max - d_min);
+    float D = DistanceToTopAtmosphereBoundary(BottomRadius, MinimumMuS);
+    float A = (D - d_min) / (d_max - d_min);
+    // An ad-hoc function equal to 0 for mu_s = MinimumMuS (because then d = D and
+    // thus a = A), euqal to 1 for mu_s = (because then d = d_min and thus a = 0),
+    // and with a large slope around mu_s = 0, to get more texture samples near the horizon.
+    float u_mu_s = TextureCoordinatesFromUnitRange(max(1.0 - a / A, 0.0) / (1.0 + a), ScatteringRes.z);
+
+    float u_nu = (nu + 1.0) / 2.0;
+    return float4(u_nu, u_mu_s, u_mu, u_r);
+
+}
+
 /*
     Utility functions
 */
 
-// Ground or top
-// mu = cos(ray zenith angle at ray origin)
-float DistanceToAtmosphereBoundary(float r, float mu)
-{
-    float dout = -r * mu + sqrt(max(0, r * r * (mu * mu - 1) + TopRadius * TopRadius));
-    float delta2 = r * r * (mu * mu - 1.0) + BottomRadius * BottomRadius;
-    if (delta2 >= 0.0)
-    {
-        float din = -r * mu - sqrt(delta2);
-        if (din >= 0.0)
-        {
-            dout = min(dout, din);
-        }
+float RayleighPhaseFunction(float nu) {
+    float k = 3.0 / (16.0 * PI);
+    return k * (1.0 + nu * nu);
+}
+
+float MiePhaseFunction(float nu) {
+    float k = 3.0 / (8.0 * PI) * (1.0 - MiePhaseFunctionG * MiePhaseFunctionG) / (2.0 + MiePhaseFunctionG * MiePhaseFunctionG);
+    return k * (1.0 + nu * nu) / pow(1.0 + MiePhaseFunctionG * MiePhaseFunctionG - 2.0 * MiePhaseFunctionG * nu, 1.5);
+}
+
+float DistanceToNearestAtmosphereBoundary(float r, float mu, bool intersects_ground) {
+    if (intersects_ground) {
+        return DistanceToBottomAtmosphereBoundary(r, mu);
     }
-    return dout;
+    else {
+        return DistanceToTopAtmosphereBoundary(r, mu);
+    }
 }
 
 float3 GetTransmittanceToTopAtmosphereBoundary(float alt, float vzAngle)
@@ -211,6 +283,38 @@ float3 GetTransmittance(float r, float mu, float d, bool intersects_ground)
         return min(GetTransmittanceToTopAtmosphereBoundary(r_d, -mu_d) / GetTransmittanceToTopAtmosphereBoundary(r, -mu), 1);
     else
         return min(GetTransmittanceToTopAtmosphereBoundary(r, mu) / GetTransmittanceToTopAtmosphereBoundary(r_d, mu_d), 1);
+}
+
+bool RayIntersectsGround(float r, float mu)
+{
+    return mu < 0.0 && r * r * (mu * mu - 1.0) + BottomRadius * BottomRadius >= 0.0;
+}
+
+float3 GetIrradiance(float r, float mu_s) {
+    float2 uv = GetIrradianceTextureUvFromAltSzAngle(r, mu_s);
+    return ROIrradiance.SampleLevel(LinearClamp, uv, 0).rgb;
+}
+
+float4 GetScattering(Texture3D<float4> scattering, float r, float mu, float mu_s, float nu, bool intersects_ground)
+{
+    float4 uvwz = GetScatteringTextureUvwzFromRMuMuSNu(r, mu, mu_s, nu, intersects_ground);
+    float tex_coord_x = uvwz.x * (ScatteringRes.w - 1);
+    float tex_x = floor(tex_coord_x);
+    float lerp = tex_coord_x - tex_x;
+    float3 uvw0 = float3((tex_x + uvwz.y) / ScatteringRes.w, uvwz.z, uvwz.w);
+    float3 uvw1 = float3((tex_x + 1 + uvwz.y) / ScatteringRes.w, uvwz.z, uvwz.w);
+    return scattering.SampleLevel(LinearClamp, uvw0, 0) * (1.0 - lerp) + scattering.SampleLevel(LinearClamp, uvw1, 0) * lerp;
+}
+
+float4 GetScattering(Texture3D<float4> scaterring, float r, float mu, float mu_s, float nu, bool intersects_ground, int order)
+{
+    if (order == 1) {
+        float4 rayleigh_mie = GetScattering(scaterring, r, mu, mu_s, nu, intersects_ground);
+        return float4(rayleigh_mie.xyz * RayleighPhaseFunction(nu) + rayleigh_mie.w * MiePhaseFunction(nu), 0.0);
+    }
+    else {
+        return GetScattering(scaterring, r, mu, mu_s, nu, intersects_ground);
+    }
 }
 
 /*

@@ -25,6 +25,24 @@ void DynamicDescriptorHeap::CleanupUsedHeaps(uint64_t fenceValue)
 	m_ComputeHandleCache.ClearCache();
 }
 
+D3D12_GPU_DESCRIPTOR_HANDLE DynamicDescriptorHeap::UploadDirect(D3D12_CPU_DESCRIPTOR_HANDLE Handle)
+{
+	if (!HasSpace(1))
+	{
+		RetireCurrentHeap();
+		UnbindAllValid();
+	}
+
+	m_OwningContext.SetDescriptorHeap(m_DescriptorType, GetHeapPointer());
+
+	DescriptorHandle DestHandle = m_FirstDescriptor + m_CurrentOffset * m_DescriptorSize;
+	m_CurrentOffset += 1;
+
+	g_Device->CopyDescriptorsSimple(1, DestHandle, Handle, m_DescriptorType);
+
+	return DestHandle;
+}
+
 ID3D12DescriptorHeap* DynamicDescriptorHeap::RequestDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE HeapType)
 {
 	auto lg = std::lock_guard{ sm_Mutex };
@@ -183,13 +201,13 @@ void DynamicDescriptorHeap::DescriptorHandleCache::CopyAndBindStaleTables(
 	for (uint32_t i = 0; i < StaleParamCount; ++i)
 	{
 		RootIndex = RootIndices[i];
-		(CmdList->*SetFunc)(RootIndex, DestHandleStart.GetGpuHandle());
+		(CmdList->*SetFunc)(RootIndex, DestHandleStart);
 
 		DescriptorTableCache& RootDescTable = m_RootDescriptorTable[RootIndex];
 
 		D3D12_CPU_DESCRIPTOR_HANDLE* SrcHandles = RootDescTable.TableStart;
 		uint64_t SetHandles = (uint64_t)RootDescTable.AssignedHandlesBitMap;
-		D3D12_CPU_DESCRIPTOR_HANDLE CurDest = DestHandleStart.GetCpuHandle();
+		D3D12_CPU_DESCRIPTOR_HANDLE CurDest = DestHandleStart;
 		DestHandleStart += TableSize[i] * DescriptorSize;
 
 		unsigned long SkipCount;

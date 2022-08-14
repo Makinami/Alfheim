@@ -44,9 +44,13 @@ private:
 	ComputePSO m_TransmittancePSO;
 	ComputePSO m_IrradianceSinglePSO;
 	ComputePSO m_InscatterSinglePSO;
+	ComputePSO m_InscatterMultipleAPSO;
+	ComputePSO m_InscatterMultipleBPSO;
+	ComputePSO m_IrradianceMultiplePSO;
 
 	ColorBuffer m_Transmittance;
-	//ColorBuffer m_Irradiance;
+	ColorBuffer m_Irradiance;
+	ColorBuffer m_Inscatter;
 
 	TextureResolutions m_TexRes = {
 		.TransmitanceAngleResolutionX = 256,
@@ -58,6 +62,8 @@ private:
 		.SzRes = 32,
 		.VsRes = 8
 	};
+
+	int ScatteringOrders = 4; // 4
 
 	Parameters m_AtmosphericParams = {
 		.RayleighScattering = {5.8e-3f, 1.35e-2f, 3.31e-2f},

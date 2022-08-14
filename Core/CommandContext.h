@@ -90,6 +90,8 @@ public:
 		return reinterpret_cast<ComputeContext&>(*this);
 	}
 
+	void CopyBuffer(GpuResource& Dest, GpuResource& Src);
+
 	DynAlloc ReserveUploadMemory(size_t SizeInBytes)
 	{
 		return m_CpuLinearAllocator.Allocate(SizeInBytes);
@@ -149,6 +151,8 @@ public:
 		return CommandContext::Begin(ID).GetGraphicsContext();
 	}
 
+	void ClearUAV(GpuBuffer& Target);
+	void ClearUAV(ColorBuffer& Target);
 	void ClearColor(ColorBuffer& Target);
 	void ClearDepth(DepthBuffer& Target);
 
@@ -207,6 +211,9 @@ class ComputeContext : public CommandContext
 {
 public:
 	static ComputeContext& Begin(const std::wstring& ID = L"", bool Async = false);
+
+	void ClearUAV(GpuBuffer& Target);
+	void ClearUAV(ColorBuffer& Target);
 
 	void SetRootSignature(const RootSignature& RootSig);
 
@@ -625,4 +632,12 @@ inline void ComputeContext::Dispatch3D(size_t ThreadCountX, size_t ThreadCountY,
 		Math::DivideByMultiple(ThreadCountY, GroupSizeY),
 		Math::DivideByMultiple(ThreadCountZ, GroupSizeZ)
 	);
+}
+
+inline void CommandContext::CopyBuffer(GpuResource& Dest, GpuResource& Src)
+{
+	TransitionResource(Dest, D3D12_RESOURCE_STATE_COPY_DEST);
+	TransitionResource(Src, D3D12_RESOURCE_STATE_COPY_SOURCE);
+	FlushResourceBarriers();
+	m_CommandList->CopyResource(Dest.GetResource(), Src.GetResource());
 }

@@ -33,6 +33,9 @@ public:
 		m_ComputeHandleCache.StageDescriptorHandles(RootIndex, Offset, NumHandles, Handles);
 	}
 
+	// Bypass the cache and uplaod directly to the shader-visible heap
+	D3D12_GPU_DESCRIPTOR_HANDLE UploadDirect(D3D12_CPU_DESCRIPTOR_HANDLE Handle);
+
 	void ParseGraphicsRootSignature(const RootSignature& RootSig)
 	{
 		m_GraphicsHandleCache.ParseRootSignature(m_DescriptorType, RootSig);
