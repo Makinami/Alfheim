@@ -9,8 +9,8 @@ cbuffer constBuffer : register(b0)
 	float DENSITY;
 	float SURFACE_TENSION;
 	float TIME;
+	float LAMBDA_J;
 };
-static float LAMBDA_J = 1.0; // before 2.5. Why?
 
 Texture2DArray<float> spectrumTex : register(t0);
 Texture2DArray<float> phaseTex : register(t1);

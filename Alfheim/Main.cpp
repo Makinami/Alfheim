@@ -39,6 +39,7 @@ void Alfheim::Startup(void)
 	//m_PrimitiveRenderer.Initialize();
 
 	m_Water.Initialize();
+	m_Water.SetWind({ 10.f, 10.f });
 }
 
 void Alfheim::Update([[maybe_unused]] float deltaT)

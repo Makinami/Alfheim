@@ -33,6 +33,7 @@
     <None Include="Shaders\PrimitiveRS.hlsli">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="vcpkg.json" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PrimitiveRenderer.h">

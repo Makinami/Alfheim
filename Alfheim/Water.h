@@ -1,15 +1,21 @@
 #pragma once
 
+#include <array>
+
 #include "ColorBuffer.h"
 #include "RootSignature.h"
 #include "PipelineState.h"
 #include "CommandContext.h"
 #include "Camera.h"
 
+
 class Water
 {
 public:
 	void Initialize();
+
+	void SetWind(float speed, float direction);
+	void SetWind(DirectX::XMFLOAT2 speed);
 
 	void Update(float deltaT);
 
@@ -39,5 +45,9 @@ private:
 	ComputePSO m_FFTPSO;
 
 	GraphicsPSO m_ForwardPSO;
+
+	DirectX::XMFLOAT2 m_WindSpeed = {0, 0};
+	bool m_SpectrumDirty = true;
+	float m_Choppiness = 1.5; // [1.0; 2.5]
 };
 

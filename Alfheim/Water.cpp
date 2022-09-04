@@ -2,6 +2,7 @@
 
 #include <random>
 #include <ranges>
+#include <numbers>
 
 #include "GraphicsCommon.h"
 #include "BufferManager.h"
@@ -106,10 +107,21 @@ void Water::Initialize()
 	m_ForwardPSO.SetPixelShader(g_pOceanPS, sizeof(g_pOceanPS));
 	m_ForwardPSO.Finalize();
 
-
 	auto [vertices, indices] = GeneratePlaneGrid(101, 101);
 	m_VertexBuffer.Create(L"Water grid vertex buffer", vertices.size(), sizeof(vertices[0]), vertices.data());
 	m_IndexBuffer.Create(L"Water grid index buffer", indices.size(), sizeof(indices[0]), indices.data());
+}
+
+void Water::SetWind(const float speed, const float direction)
+{
+	const float mathDirection = 1.5f * std::numbers::pi_v<float> - std::numbers::pi_v<float> * direction / 180.f;
+	SetWind({ std::cos(mathDirection) * speed, std::sin(mathDirection) * speed });
+}
+
+void Water::SetWind(const XMFLOAT2 speed)
+{
+	m_WindSpeed = speed;
+	m_SpectrumDirty = true;
 }
 
 void Water::Update(float deltaT)
@@ -137,16 +149,17 @@ void Water::Update(float deltaT)
 	genSpectrumConstants.inversetGridSize = { XM_2PI / m_GridSize[0], XM_2PI / m_GridSize[1], XM_2PI / m_GridSize[2], XM_2PI / m_GridSize[3] };
 	genSpectrumConstants.minK = { XM_PI / m_GridSize[0], XM_PI * m_FFTSize / m_GridSize[0], XM_PI * m_FFTSize / m_GridSize[1], XM_PI * m_FFTSize / m_GridSize[2] };
 	genSpectrumConstants.gridResolution = { m_FFTSize, m_FFTSize };
-	genSpectrumConstants.wind = { 15, 15 };
+	genSpectrumConstants.wind = m_WindSpeed;
 	genSpectrumConstants.g = 9.81f;
 	genSpectrumConstants.density = 997.f;
 	genSpectrumConstants.surfaceTension = 0.0714f;
 	genSpectrumConstants.time = m_Time;
+	genSpectrumConstants.labdaJ = m_Choppiness;
 
 	cmpContext.SetDynamicConstantBufferView(0, sizeof(genSpectrumConstants), &genSpectrumConstants);
 
-	ResetParameterDependentResources(cmpContext);
-
+	if (m_SpectrumDirty)
+		ResetParameterDependentResources(cmpContext);
 
 	cmpContext.SetPipelineState(m_PrepareFFTPSO);
 
@@ -210,4 +223,6 @@ void Water::ResetParameterDependentResources(ComputeContext& cmpContext)
 	cmpContext.SetDynamicDescriptor(1, 0, m_Spectrum.GetUAV());
 
 	cmpContext.Dispatch3D(m_FFTSize, m_FFTSize, 4, 8, 8, 1);
+
+	m_SpectrumDirty = false;
 }
