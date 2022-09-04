@@ -114,7 +114,6 @@
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="PrimitiveRenderer.cpp" />
-    <ClCompile Include="TallCells.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.vcxproj">
@@ -128,7 +127,6 @@
   <ItemGroup>
     <ClInclude Include="MeshBufferPacker.h" />
     <ClInclude Include="PrimitiveRenderer.h" />
-    <ClInclude Include="TallCells.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\PrimitivePS.hlsl">

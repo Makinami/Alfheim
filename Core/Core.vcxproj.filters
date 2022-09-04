@@ -299,6 +299,7 @@
     <None Include="Shaders\PerfGraphRS.hlsli">
       <Filter>Shaders\PerfGraph</Filter>
     </None>
+    <None Include="vcpkg.json" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\ScreenQuadVS.hlsl">
