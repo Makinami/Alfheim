@@ -4,19 +4,19 @@
 
 namespace Utility
 {
-    inline void Print(const char* msg) { fmt::print("{}", msg); }
+    inline void Print(const char* msg) { fmt::print(FMT_STRING("{}"), msg); }
     inline void Print(const wchar_t* msg) { fmt::print(L"{}", msg); }
 
     template <typename ...Args>
     inline void Printf(const char* format, Args... args)
     {
-        fmt::print(format, args...);
+        fmt::print(fmt::runtime(format), args...);
     }
 
     template <typename ...Args>
     inline void Printf(const wchar_t* format, Args... args)
     {
-        fmt::print(format, args...);
+        fmt::print(fmt::basic_runtime<wchar_t>(format), args...);
     }
 
 #ifndef RELEASE
@@ -24,7 +24,7 @@ namespace Utility
     inline void PrintSubMessage(const char* format, Args... args)
     {
         fmt::print("--> ");
-        fmt::print(format, args...);
+        fmt::print(fmt::runtime(format), args...);
         fmt::print("\n");
     }
 
@@ -32,7 +32,7 @@ namespace Utility
     inline void PrintSubMessage(const wchar_t* format, Args... args)
     {
         fmt::print("--> ");
-        fmt::print(format, args...);
+        fmt::print(fmt::basic_runtime<wchar_t>(format), args...);
         fmt::print("\n");
     }
 
@@ -54,18 +54,18 @@ namespace Utility
 
 #ifdef RELEASE
 
-    #define ASSERT(isTrue, ...) (void)(isTrue)
-    #define WARN_ONCE_IF(isTrue, ...) (void)(isTrue)
-    #define WARN_ONCE_IF_NOT(isTrue, ...) (void)(isTrue)
-    #define ERROR(msg, ...)
-    #define DEBUGPRINT(msg, ...) do {} while (0)
-    #define ASSERT_SUCCCEEDED(hr, ...) (void)(hr)
+#define ASSERT(isTrue, ...) (void)(isTrue)
+#define WARN_ONCE_IF(isTrue, ...) (void)(isTrue)
+#define WARN_ONCE_IF_NOT(isTrue, ...) (void)(isTrue)
+#define ERROR(msg, ...)
+#define DEBUGPRINT(msg, ...) do {} while (0)
+#define ASSERT_SUCCCEEDED(hr, ...) (void)(hr)
 
 #else // !RELEASE
 
-    #define STRINGIFY(x) #x
-    #define STRINGIFY_BUILTIN(x) STRINGIFY(x)
-    #define ASSERT(isFalse, ...) \
+#define STRINGIFY(x) #x
+#define STRINGIFY_BUILTIN(x) STRINGIFY(x)
+#define ASSERT(isFalse, ...) \
         if (!(bool)(isFalse)) { \
             Utility::Print("\nAssertion failed in " STRINGIFY_BUILTIN(__FILE__) " @ " STRINGIFY_BUILTIN(__LINE__) "\n"); \
             Utility::PrintSubMessage("\'" #isFalse "\' is false"); \
@@ -74,7 +74,7 @@ namespace Utility
             __debugbreak(); \
         }
 
-    #define ASSERT_SUCCEEDED( hr, ... ) \
+#define ASSERT_SUCCEEDED( hr, ... ) \
         if (FAILED(hr)) { \
             Utility::Print("\nHRESULT failed in " STRINGIFY_BUILTIN(__FILE__) " @ " STRINGIFY_BUILTIN(__LINE__) "\n"); \
             Utility::PrintSubMessage("hr = {:#x}", static_cast<HRESULT>(hr)); \
@@ -83,7 +83,7 @@ namespace Utility
             __debugbreak(); \
         }
 
-    #define WARN_ONCE_IF(isTrue, ...) \
+#define WARN_ONCE_IF(isTrue, ...) \
     { \
         static bool s_TriggeredWarning = false; \
         if ((bool)(isTrue) && !s_TriggeredWarning) { \
@@ -95,14 +95,14 @@ namespace Utility
         } \
     }
 
-    #define WARN_ONCE_IF_NOT(isTrue, ...) WARN_ONCE_IF(!(isTrue), __VA_ARGS__)
+#define WARN_ONCE_IF_NOT(isTrue, ...) WARN_ONCE_IF(!(isTrue), __VA_ARGS__)
 
-    #define ERROR(...) \
+#define ERROR(...) \
         Utility::Print("\nError reported in " STRINGIFY_BUILTIN(__FILE__) " @ " STRINGIFY_BUILTIN(__LINE__) "\n"); \
         Utility::PrintSubMessage(__VA_ARGS__); \
         Utility::Print("\n");
 
-    #define DEBUGPRINT(msg, ...) \
+#define DEBUGPRINT(msg, ...) \
     Utility::Printf(msg "\n", ##__VA_ARGS__);
 
 #endif

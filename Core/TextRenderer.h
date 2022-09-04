@@ -54,7 +54,7 @@ public:
     template <typename S, typename ... Args, typename Char = fmt::char_t<S>>
     void DrawFormattedString(const S& format, Args ... args)
     {
-        DrawString(fmt::format(format, args...));
+        DrawString(fmt::format(fmt::runtime(format), args...));
     }
 
 private:

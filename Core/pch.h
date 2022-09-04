@@ -5,12 +5,14 @@
 #pragma warning(disable:4324) // structure was padded due to __declspec(align())
 
 #ifndef WIN32_LEAN_AND_MEAN
-	#define WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
 #endif
 #ifndef NOMINMAX
-	#define NOMINMAX
+#define NOMINMAX
 #endif
 #include <windows.h>
+
+#undef pascal
 
 #include <d3d12.h>
 
@@ -30,6 +32,7 @@
 #include <memory>
 
 #include <fmt/format.h>
+#include <fmt/xchar.h>
 
 #include <wrl.h>
 #include <ppltasks.h>
