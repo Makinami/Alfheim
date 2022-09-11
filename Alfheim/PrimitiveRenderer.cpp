@@ -188,10 +188,8 @@ auto GeneratePlaneMesh() -> std::pair<std::vector<VertexData>, std::vector<int>>
 
 void PrimitiveRenderer::Initialize()
 {
-	m_RootSig.Reset(3, 0);
+	m_RootSig.Reset(1, 0);
 	m_RootSig[0].InitAsConstantBuffer(0, D3D12_SHADER_VISIBILITY_ALL);
-	m_RootSig[1].InitAsBufferSRV(0, D3D12_SHADER_VISIBILITY_VERTEX);
-	m_RootSig[2].InitAsBufferSRV(1, D3D12_SHADER_VISIBILITY_VERTEX);
 	m_RootSig.Finalize(L"PrimitivesRootSig", D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
 	D3D12_INPUT_ELEMENT_DESC InputLayout[] =

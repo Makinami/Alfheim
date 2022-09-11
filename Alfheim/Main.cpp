@@ -5,6 +5,7 @@
 #include "BufferManager.h"
 
 #include "PrimitiveRenderer.h"
+#include "Stone.h"
 
 using namespace GameCore;
 
@@ -24,6 +25,7 @@ private:
 	std::unique_ptr<CameraController> m_CameraController;
 
 	PrimitiveRenderer m_PrimitiveRenderer;
+	Stone m_Stone;
 };
 
 CREATE_APPLICATION( Alfheim )
@@ -35,6 +37,7 @@ void Alfheim::Startup(void)
 	m_CameraController->SetMovementSpeed(50.f);
 
 	m_PrimitiveRenderer.Initialize();
+	m_Stone.Initialize();
 }
 
 void Alfheim::Update([[maybe_unused]] float deltaT)
@@ -53,7 +56,7 @@ void Alfheim::RenderScene(void)
 
 	gfxContext.SetRenderTarget(Graphics::g_SceneColorBuffer.GetRTV(), Graphics::g_SceneDepthBuffer.GetDSV());
 
-	m_PrimitiveRenderer.Render(gfxContext, m_Camera);
+	m_Stone.Render(gfxContext, m_Camera);
 
 	gfxContext.Finish();
 }

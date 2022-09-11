@@ -23,7 +23,7 @@ struct VSInput
 {
 	float3 position : POSITION;
 	float3 normal : NORMAL;
-	float4x4 world : WORLD;
+	//float4x4 world : WORLD;
 	//uint vertexId : SV_VertexID;
 	//uint instanceId : SV_InstanceID;
 };
@@ -35,7 +35,6 @@ struct VSOutput
 	float3 worldPos : POSITION;
 };
 
-[RootSignature(Primitive_RootSig)]
 VSOutput main(VSInput vin)
 {
 	VSOutput vout;
@@ -44,7 +43,8 @@ VSOutput main(VSInput vin)
 	float4 lPosition = float4(VertexBuffer[vin.vertexId].position, 1.0f);
 	float4 lNormal = float4(VertexBuffer[vin.vertexId].normal, 0.0f);*/
 
-	vout.worldPos = mul(vin.world, float4(vin.position, 1.0f));
+	//vout.worldPos = mul(vin.world, float4(vin.position, 1.0f));
+	vout.worldPos = float4(vin.position, 1.0f);
 	vout.position = mul(viewProj, float4(vout.worldPos, 1.0f));
 	vout.normal = vin.normal;
 

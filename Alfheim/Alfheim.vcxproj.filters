@@ -24,18 +24,28 @@
     <ClCompile Include="PrimitiveRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Stone.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tinygtlf.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="Shaders\PrimitiveRS.hlsli">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="vcpkg.json" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PrimitiveRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MeshBufferPacker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Stone.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
