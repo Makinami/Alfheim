@@ -36,7 +36,6 @@ void Alfheim::Startup(void)
 	m_CameraController = std::make_unique<CameraController>(m_Camera, Math::Vector3(Math::kYUnitVector));
 	m_CameraController->SetMovementSpeed(50.f);
 
-	m_PrimitiveRenderer.Initialize();
 	m_Stone.Initialize();
 }
 

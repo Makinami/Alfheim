@@ -4,6 +4,7 @@
 #include <Camera.h>
 #include <GpuBuffer.h>
 #include <tiny_gltf.h>
+#include <TextureManager.h>
 
 class Stone
 {
@@ -21,8 +22,8 @@ public:
 	void Render(GraphicsContext& gfxContext, const Math::Camera& camera);
 
 private:
-	void DrawNode(GraphicsContext& gfxContext, const tinygltf::Node& node);
-	void DrawMesh(GraphicsContext& gfxContext, const tinygltf::Mesh& mesh);
+	void DrawNode(GraphicsContext& gfxContext, const tinygltf::Node& node, Math::Matrix4 transformation);
+	void DrawMesh(GraphicsContext& gfxContext, const tinygltf::Mesh& mesh, Math::Matrix4 transformation);
 
 	RootSignature m_RootSig;
 
@@ -34,6 +35,8 @@ private:
 	StructuredUploadBuffer<InstanceData> m_InstanceBuffer;
 
 	std::vector<ByteAddressBuffer> m_Buffers;
+	std::vector<Texture> m_Textures;
+	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> m_Samplers;
 
 	tinygltf::Model m_Model;
 };
