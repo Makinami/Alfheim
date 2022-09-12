@@ -21,7 +21,8 @@ cbuffer VSConstantsVP : register(b1)
 
 cbuffer VSConstantsW : register(b0)
 {
-	float4x4 world;
+	float4x4 worldMatrix;
+	float4x4 normalMatrix;
 }
 
 struct VSInput
@@ -29,6 +30,7 @@ struct VSInput
 	float3 position : POSITION;
 	float3 normal : NORMAL;
 	float2 texCoord: TEXCOORD0;
+	float4 tangent :TANGENT;
 	//float4x4 world : WORLD;
 	//uint vertexId : SV_VertexID;
 	//uint instanceId : SV_InstanceID;
@@ -40,6 +42,7 @@ struct VSOutput
 	float3 normal : NORMAL;
 	float3 worldPos : POSITION;
 	float2 texCoord : TEXCOORD0;
+	float4 tangent :TANGENT;
 };
 
 VSOutput main(VSInput vin)
@@ -50,9 +53,10 @@ VSOutput main(VSInput vin)
 	float4 lPosition = float4(VertexBuffer[vin.vertexId].position, 1.0f);
 	float4 lNormal = float4(VertexBuffer[vin.vertexId].normal, 0.0f);*/
 
-	vout.worldPos = mul(world, float4(vin.position, 1.0f));
+	vout.worldPos = mul(worldMatrix, float4(vin.position, 1.0f));
 	vout.position = mul(viewProj, float4(vout.worldPos, 1.0f));
-	vout.normal = vin.normal;
+	vout.normal = mul(normalMatrix, float4(vin.normal, 0.0f));
+	vout.tangent = mul(normalMatrix, vin.tangent);
 	vout.texCoord = vin.texCoord;
 
 	return vout;

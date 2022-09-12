@@ -92,14 +92,10 @@ using namespace DirectX;
 	return DXGI_FORMAT_UNKNOWN;
 }
 
-void Stone::Initialize()
+void Stone::Initialize(std::string_view filename)
 {
-	auto filename = "./Stone.glb";
-	auto path = std::filesystem::current_path();
-
-	std::string err, warn;
 	tinygltf::TinyGLTF loader;
-	loader.LoadBinaryFromFile(&m_Model, &err, &warn, filename);
+	ASSERT(loader.LoadBinaryFromFile(&m_Model, nullptr, nullptr, std::string{ filename }));
 
 	m_Buffers.reserve(m_Model.buffers.size());
 	std::ranges::transform(m_Model.buffers, std::back_inserter(m_Buffers), [](const tinygltf::Buffer& buffer) {
@@ -134,9 +130,10 @@ void Stone::Initialize()
 
 	D3D12_INPUT_ELEMENT_DESC InputLayout[] =
 	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    2, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT,    1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,       2, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TANGENT",  0, DXGI_FORMAT_R32G32B32A32_FLOAT, 3, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 	};
 
 	m_SurfacePSO.SetRootSignature(m_RootSig);
@@ -159,9 +156,7 @@ void Stone::Render([[maybe_unused]] GraphicsContext& gfxContext, [[maybe_unused]
 {
 	gfxContext.SetRootSignature(m_RootSig);
 	gfxContext.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	//gfxContext.SetIndexBuffer(m_IndexBuffer.IndexBufferView());
 	gfxContext.TransitionResource(m_Buffers[0], D3D12_RESOURCE_STATE_GENERIC_READ);
-	//gfxContext.SetVertexBuffer(0, m_VertexBuffer.VertexBufferView());
 
 	gfxContext.SetPipelineState(m_WireframePSO);
 	gfxContext.SetViewportAndScissor(0, 0, Graphics::g_SceneColorBuffer.GetWidth(), Graphics::g_SceneColorBuffer.GetHeight());
@@ -173,25 +168,32 @@ void Stone::Render([[maybe_unused]] GraphicsContext& gfxContext, [[maybe_unused]
 	XMStoreFloat4x4(&vsConstants.viewProjMatrix, camera.GetViewProjMatrix());
 	gfxContext.SetDynamicConstantBufferView(1, sizeof(vsConstants), &vsConstants);
 
-	//gfxContext.SetVertexBuffer(2, m_InstanceBuffer.VertexBufferView(1, sizeof(InstanceData)));
-
 	const auto& scene = m_Model.scenes[m_Model.defaultScene];
 	const auto& transformation = Matrix4::MakeScale(50) * Matrix4{kIdentity};
 	for (const auto& nodeId : scene.nodes)
 	{
 		DrawNode(gfxContext, m_Model.nodes[nodeId], transformation);
 	}
+}
 
-	//gfxContext.DrawIndexedInstanced(m_Foos[type].IndexCount, 1, 0, 0, 0);
+XMMATRIX InverseTranspose(CXMMATRIX M)
+{
+	XMMATRIX A = M;
+	A.r[3] = XMVectorSet(0.f, 0.f, 0.f, 1.f);
+
+	XMVECTOR det = XMMatrixDeterminant(A);
+	return XMMatrixTranspose(XMMatrixInverse(&det, A));
 }
 
 void Stone::DrawMesh(GraphicsContext& gfxContext, const tinygltf::Mesh& mesh, Matrix4 transformation)
 {
 	__declspec(align(16)) struct {
-		XMFLOAT4X4 transformation;
+		XMFLOAT4X4 worldTransformation;
+		XMFLOAT4X4 normalTransformation;
 	} vsConstants;
 
-	XMStoreFloat4x4(&vsConstants.transformation, transformation);
+	XMStoreFloat4x4(&vsConstants.worldTransformation, transformation);
+	XMStoreFloat4x4(&vsConstants.normalTransformation, InverseTranspose(transformation));
 	gfxContext.SetDynamicConstantBufferView(0, sizeof(vsConstants), &vsConstants);
 
 	for (const auto& primitive : mesh.primitives)
@@ -218,6 +220,14 @@ void Stone::DrawMesh(GraphicsContext& gfxContext, const tinygltf::Mesh& mesh, Ma
 			const auto& textureCoordinatesBufferView = m_Model.bufferViews[textureCoordinatesAccessor.bufferView];
 			const auto stride = textureCoordinatesAccessor.ByteStride(textureCoordinatesBufferView);
 			gfxContext.SetVertexBuffer(2, m_Buffers[textureCoordinatesBufferView.buffer].VertexBufferView(textureCoordinatesBufferView.byteOffset, textureCoordinatesAccessor.count * stride, stride));
+		}
+
+		if (const auto it = primitive.attributes.find("TANGENT"); it != primitive.attributes.end())
+		{
+			const auto& textureCoordinatesAccessor = m_Model.accessors[it->second];
+			const auto& textureCoordinatesBufferView = m_Model.bufferViews[textureCoordinatesAccessor.bufferView];
+			const auto stride = textureCoordinatesAccessor.ByteStride(textureCoordinatesBufferView);
+			gfxContext.SetVertexBuffer(3, m_Buffers[textureCoordinatesBufferView.buffer].VertexBufferView(textureCoordinatesBufferView.byteOffset, textureCoordinatesAccessor.count * stride, stride));
 		}
 
 		const auto& indicesAccessor = m_Model.accessors[primitive.indices];

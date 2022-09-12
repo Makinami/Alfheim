@@ -14,7 +14,7 @@ class Stone
 	};
 
 public:
-	void Initialize();
+	void Initialize(std::string_view filename);
 	void Shutdown() {}
 
 	void Update([[maybe_unused]] float deltaT) {}
