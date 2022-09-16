@@ -6,11 +6,23 @@
 #include <tiny_gltf.h>
 #include <TextureManager.h>
 
+struct SimpleLight;
+
 class Stone
 {
 	struct InstanceData
 	{
 		DirectX::XMFLOAT4X4 WorldTransformation;
+	};
+
+	struct SimpleLight
+	{
+		DirectX::XMFLOAT3 Strength;
+		float FalloffStart;
+		DirectX::XMFLOAT3 Direction;
+		float FalloffEnd;
+		DirectX::XMFLOAT3 Position;
+		float SpotPower;
 	};
 
 public:
@@ -37,6 +49,10 @@ private:
 	std::vector<ByteAddressBuffer> m_Buffers;
 	std::vector<Texture> m_Textures;
 	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> m_Samplers;
+	StructuredBuffer m_Materials;
 
 	tinygltf::Model m_Model;
+
+	std::vector<SimpleLight> m_SimpleLights;
+	StructuredUploadBuffer<SimpleLight> m_SimpleLightsBuffer;
 };

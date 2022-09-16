@@ -17,12 +17,14 @@ StructuredBuffer<InstanceData> InstanceBuffer : register(t1);
 cbuffer VSConstantsVP : register(b1)
 {
 	float4x4 viewProj;
+	float3 cameraPosition;
 }
 
 cbuffer VSConstantsW : register(b0)
 {
 	float4x4 worldMatrix;
 	float4x4 normalMatrix;
+	int materialId;
 }
 
 struct VSInput

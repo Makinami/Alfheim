@@ -92,6 +92,18 @@ using namespace DirectX;
 	return DXGI_FORMAT_UNKNOWN;
 }
 
+struct Material
+{
+	int DiffuseTextureId;
+	int DiffuseSamplerId;
+
+	int NormalTextureId;
+	int NormalSamplerId;
+
+	int OcclusionTextureId;
+	int OcclusionSamplerId;
+};
+
 void Stone::Initialize(std::string_view filename)
 {
 	tinygltf::TinyGLTF loader;
@@ -121,11 +133,51 @@ void Stone::Initialize(std::string_view filename)
 		return desc.CreateDescriptor();
 	});
 
-	m_RootSig.Reset(4, 0);
-	m_RootSig[0].InitAsConstantBuffer(0, D3D12_SHADER_VISIBILITY_VERTEX);
+	m_SimpleLightsBuffer.Create(L"Simple lights", 16);
+	m_SimpleLightsBuffer[0] = SimpleLight{ XMFLOAT3{ 0.5f, 0.5f, 1.f }, 20.f, XMFLOAT3{}, 40.f, XMFLOAT3{ 10.f, 10.f, 10.f }, 0 };
+
+	auto materials = std::vector<Material>();
+	materials.reserve(m_Model.materials.size());
+	std::ranges::transform(m_Model.materials, std::back_inserter(materials), [this](const tinygltf::Material& material) {
+		auto localMaterial = Material{};
+		{
+			const auto it = material.extensions.find("KHR_materials_pbrSpecularGlossiness");
+			const auto& pbrSpecularGlossiness = it->second;
+			const auto& diffuseTexture = pbrSpecularGlossiness.Get("diffuseTexture");
+			const auto& glTexture = m_Model.textures[diffuseTexture.Get("index").GetNumberAsInt()];
+			localMaterial.DiffuseTextureId = glTexture.source;
+			localMaterial.DiffuseSamplerId = glTexture.sampler;
+		}
+		{
+			//const auto it = material.extensions.find("KHR_materials_pbrSpecularGlossiness");
+			//const auto& pbrSpecularGlossiness = it->second;
+			//const auto& diffuseTexture = pbrSpecularGlossiness.Get("specularGlossinessTexture");
+			//const auto& glTexture = m_Model.textures[diffuseTexture.Get("index").GetNumberAsInt()];
+			////
+		}
+		{
+			const auto& normal = material.normalTexture;
+			const auto& glTexture = m_Model.textures[normal.index];
+			localMaterial.NormalTextureId = glTexture.source;
+			localMaterial.NormalSamplerId = glTexture.sampler;
+		}
+		{
+			const auto& oclusion = material.occlusionTexture;
+			const auto& glTexture = m_Model.textures[oclusion.index];
+			localMaterial.OcclusionTextureId = glTexture.source;
+			localMaterial.OcclusionSamplerId = glTexture.sampler;
+		}
+		return localMaterial;
+	});
+	m_Materials.Create(L"Stone Materials", materials.size(), sizeof(materials[0]), materials.data());
+
+	m_RootSig.Reset(5, 0);
+	m_RootSig[0].InitAsConstantBuffer(0, D3D12_SHADER_VISIBILITY_ALL);
 	m_RootSig[1].InitAsConstantBuffer(1, D3D12_SHADER_VISIBILITY_VERTEX);
-	m_RootSig[2].InitAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 0, 5);
-	m_RootSig[3].InitAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 0, 5);
+	m_RootSig[2].InitAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 0, static_cast<UINT>(m_Model.images.size()));
+	m_RootSig[3].InitAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 0, static_cast<UINT>(m_Model.samplers.size()));
+	m_RootSig[4].InitAsDescriptorTable(1);
+	m_RootSig[4].SetTableRange(0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 0, 2, 1);
 	m_RootSig.Finalize(L"StoneRootSig", D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
 	D3D12_INPUT_ELEMENT_DESC InputLayout[] =
@@ -163,10 +215,22 @@ void Stone::Render([[maybe_unused]] GraphicsContext& gfxContext, [[maybe_unused]
 
 	__declspec(align(16)) struct {
 		XMFLOAT4X4 viewProjMatrix;
+		XMFLOAT3 cameraPosition;
 	} vsConstants;
 
 	XMStoreFloat4x4(&vsConstants.viewProjMatrix, camera.GetViewProjMatrix());
+	XMStoreFloat3(&vsConstants.cameraPosition, camera.GetPosition());
 	gfxContext.SetDynamicConstantBufferView(1, sizeof(vsConstants), &vsConstants);
+
+	auto srvs = std::vector<D3D12_CPU_DESCRIPTOR_HANDLE>();
+	srvs.reserve(m_Textures.size());
+	std::ranges::transform(m_Textures, std::back_inserter(srvs), [](const auto& texture) {
+		return texture.GetSRV();
+	});
+	gfxContext.SetDynamicDescriptors(2, 0, static_cast<UINT>(srvs.size()), srvs.data());
+	gfxContext.SetDynamicSamplers(3, 0, static_cast<UINT>(m_Samplers.size()), m_Samplers.data());
+	gfxContext.SetDynamicDescriptor(4, 0, m_Materials.GetSRV());
+	gfxContext.SetDynamicDescriptor(4, 1, m_SimpleLightsBuffer.GetSRV());
 
 	const auto& scene = m_Model.scenes[m_Model.defaultScene];
 	const auto& transformation = Matrix4::MakeScale(50) * Matrix4{kIdentity};
@@ -190,14 +254,19 @@ void Stone::DrawMesh(GraphicsContext& gfxContext, const tinygltf::Mesh& mesh, Ma
 	__declspec(align(16)) struct {
 		XMFLOAT4X4 worldTransformation;
 		XMFLOAT4X4 normalTransformation;
+		int materialId;
+		int lightsNum;
 	} vsConstants;
 
 	XMStoreFloat4x4(&vsConstants.worldTransformation, transformation);
 	XMStoreFloat4x4(&vsConstants.normalTransformation, InverseTranspose(transformation));
-	gfxContext.SetDynamicConstantBufferView(0, sizeof(vsConstants), &vsConstants);
+	vsConstants.lightsNum = 1;
 
 	for (const auto& primitive : mesh.primitives)
 	{
+		vsConstants.materialId = primitive.material;
+		gfxContext.SetDynamicConstantBufferView(0, sizeof(vsConstants), &vsConstants);
+
 		if (const auto it = primitive.attributes.find("POSITION"); it != primitive.attributes.end())
 		{
 			const auto& positionAccessor = m_Model.accessors[it->second];
@@ -233,44 +302,6 @@ void Stone::DrawMesh(GraphicsContext& gfxContext, const tinygltf::Mesh& mesh, Ma
 		const auto& indicesAccessor = m_Model.accessors[primitive.indices];
 		const auto& indicesBufferView = m_Model.bufferViews[indicesAccessor.bufferView];
 		gfxContext.SetIndexBuffer(m_Buffers[indicesBufferView.buffer].IndexBufferView(indicesBufferView.byteOffset));
-
-		const auto& material = m_Model.materials[primitive.material];
-		{
-			const auto it = material.extensions.find("KHR_materials_pbrSpecularGlossiness");
-			const auto& pbrSpecularGlossiness = it->second;
-			const auto& diffuseTexture = pbrSpecularGlossiness.Get("diffuseTexture");
-			const auto& glTexture = m_Model.textures[diffuseTexture.Get("index").GetNumberAsInt()];
-			const auto& dxTexture = m_Textures[glTexture.source];
-
-			gfxContext.SetDynamicDescriptor(2, 0, dxTexture.GetSRV());
-			gfxContext.SetDynamicSampler(3, 0, m_Samplers[glTexture.sampler]);
-		}
-		{
-			const auto it = material.extensions.find("KHR_materials_pbrSpecularGlossiness");
-			const auto& pbrSpecularGlossiness = it->second;
-			const auto& diffuseTexture = pbrSpecularGlossiness.Get("specularGlossinessTexture");
-			const auto& glTexture = m_Model.textures[diffuseTexture.Get("index").GetNumberAsInt()];
-			const auto& dxTexture = m_Textures[glTexture.source];
-
-			gfxContext.SetDynamicDescriptor(2, 1, dxTexture.GetSRV());
-			gfxContext.SetDynamicSampler(3, 1, m_Samplers[glTexture.sampler]);
-		}
-		{
-			const auto& normal = material.normalTexture;
-			const auto& glTexture = m_Model.textures[normal.index];
-			const auto& dxTexture = m_Textures[glTexture.source];
-
-			gfxContext.SetDynamicDescriptor(2, 2, dxTexture.GetSRV());
-			gfxContext.SetDynamicSampler(3, 2, m_Samplers[glTexture.sampler]);
-		}
-		{
-			const auto& oclusion = material.occlusionTexture;
-			const auto& glTexture = m_Model.textures[oclusion.index];
-			const auto& dxTexture = m_Textures[glTexture.source];
-
-			gfxContext.SetDynamicDescriptor(2, 3, dxTexture.GetSRV());
-			gfxContext.SetDynamicSampler(3, 3, m_Samplers[glTexture.sampler]);
-		}
 
 		gfxContext.DrawIndexed(indicesAccessor.count);
 	}
