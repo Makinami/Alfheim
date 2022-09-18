@@ -4,8 +4,9 @@
 
 namespace Utility
 {
-    inline void Print(const char* msg) { fmt::print(FMT_STRING("{}"), msg); }
-    inline void Print(const wchar_t* msg) { fmt::print(L"{}", msg); }
+    inline void Print(const char* msg) { fmt::print(fmt::basic_runtime<char>(msg)); }
+    inline void Print(const wchar_t* msg) { fmt::print(fmt::basic_runtime<wchar_t>(msg)); }
+    inline void Print(std::string msg) { fmt::print(fmt::basic_runtime<char>(msg)); }
 
     template <typename ...Args>
     inline void Printf(const char* format, Args... args)

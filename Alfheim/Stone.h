@@ -5,16 +5,12 @@
 #include <GpuBuffer.h>
 #include <tiny_gltf.h>
 #include <TextureManager.h>
+#include "Model.h"
 
 struct SimpleLight;
 
 class Stone
 {
-	struct InstanceData
-	{
-		DirectX::XMFLOAT4X4 WorldTransformation;
-	};
-
 	struct SimpleLight
 	{
 		DirectX::XMFLOAT3 Strength;
@@ -26,32 +22,21 @@ class Stone
 	};
 
 public:
-	void Initialize(std::string_view filename);
+	void Initialize();
 	void Shutdown() {}
 
 	void Update([[maybe_unused]] float deltaT) {}
 
-	void Render(GraphicsContext& gfxContext, const Math::Camera& camera);
+	void Render(GraphicsContext& gfxContext, const Math::Camera& camera, Model& model, Math::Matrix4 transformation);
 
 private:
-	void DrawNode(GraphicsContext& gfxContext, const tinygltf::Node& node, Math::Matrix4 transformation);
-	void DrawMesh(GraphicsContext& gfxContext, const tinygltf::Mesh& mesh, Math::Matrix4 transformation);
+	void DrawNode(GraphicsContext& gfxContext, const Model& model, int nodeId, Math::Matrix4 transformation);
+	void DrawMesh(GraphicsContext& gfxContext, const Model::Mesh& mesh, Math::Matrix4 transformation);
 
 	RootSignature m_RootSig;
 
 	GraphicsPSO m_SurfacePSO;
 	GraphicsPSO m_WireframePSO;
-
-	StructuredBuffer m_PositionBuffer;
-	StructuredBuffer m_NormalBuffer;
-	StructuredUploadBuffer<InstanceData> m_InstanceBuffer;
-
-	std::vector<ByteAddressBuffer> m_Buffers;
-	std::vector<Texture> m_Textures;
-	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> m_Samplers;
-	StructuredBuffer m_Materials;
-
-	tinygltf::Model m_Model;
 
 	std::vector<SimpleLight> m_SimpleLights;
 	StructuredUploadBuffer<SimpleLight> m_SimpleLightsBuffer;
