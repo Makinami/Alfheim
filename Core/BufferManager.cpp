@@ -19,7 +19,7 @@ void Graphics::InitializeRenderingBuffers(uint32_t bufferWidth, uint32_t bufferH
 {
 	GraphicsContext& InitContext = GraphicsContext::Begin();
 
-	const uint32_t bufferWidth1 = (bufferWidth + 1) / 2;
+	/*const uint32_t bufferWidth1 = (bufferWidth + 1) / 2;
 	const uint32_t bufferWidth2 = (bufferWidth + 3) / 4;
 	const uint32_t bufferWidth3 = (bufferWidth + 7) / 8;
 	const uint32_t bufferWidth4 = (bufferWidth + 15) / 16;
@@ -30,7 +30,7 @@ void Graphics::InitializeRenderingBuffers(uint32_t bufferWidth, uint32_t bufferH
 	const uint32_t bufferHeight3 = (bufferHeight + 7) / 8;
 	const uint32_t bufferHeight4 = (bufferHeight + 15) / 16;
 	const uint32_t bufferHeight5 = (bufferHeight + 31) / 32;
-	const uint32_t bufferHeight6 = (bufferHeight + 63) / 64;
+	const uint32_t bufferHeight6 = (bufferHeight + 63) / 64;*/
 
 	g_SceneColorBuffer.Create(L"Main Color Buffer", bufferWidth, bufferHeight, 1, DefaultHdrColorFormat);
 	g_OverlayBuffer.Create(L"UI Overlay", g_DisplayWidth, g_DisplayHeight, 1, DXGI_FORMAT_R8G8B8A8_UNORM);

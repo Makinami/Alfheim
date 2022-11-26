@@ -24,10 +24,13 @@
     <ClCompile Include="PrimitiveRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Stone.cpp">
+    <ClCompile Include="GltfRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="tinygtlf.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Model.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -45,7 +48,10 @@
     <ClInclude Include="MeshBufferPacker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Stone.h">
+    <ClInclude Include="GltfRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Model.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

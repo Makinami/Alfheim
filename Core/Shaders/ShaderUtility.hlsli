@@ -1,5 +1,5 @@
 #ifndef __SHADER_UTILITY_HLSLI__
-#define __SHADER_UTILITY_HSLSI__
+#define __SHADER_UTILITY_HLSLI__
 
 //#pragma warning(disable: 3571)
 

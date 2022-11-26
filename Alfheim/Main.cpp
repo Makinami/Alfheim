@@ -1,11 +1,15 @@
 #include "pch.h"
+
+#include <random>
+
 #include "GameCore.h"
-#include	 "Camera.h"
+#include "Camera.h"
 #include "CameraController.h"
 #include "BufferManager.h"
 
 #include "PrimitiveRenderer.h"
-#include "Stone.h"
+#include "GltfRenderer.h"
+#include "Model.h"
 
 using namespace GameCore;
 
@@ -25,18 +29,36 @@ private:
 	std::unique_ptr<CameraController> m_CameraController;
 
 	PrimitiveRenderer m_PrimitiveRenderer;
-	Stone m_Stone;
+	GltfRenderer m_Gltf;
+	Model m_Model;
+	std::vector<Math::Matrix4> m_Transformations;
+	std::vector<SimpleLight> m_SimpleLights;
 };
 
 CREATE_APPLICATION( Alfheim )
 
 void Alfheim::Startup(void)
 {
-	m_Camera.SetEyeAtUp({ 10.f, 0.f, 0.f }, { 0.f, 0.f, 0.f }, { 0.f, 1.f, 0.f });
+	m_Camera.SetEyeAtUp({ 5.f, 0.f, 0.f }, { 0.f, 0.f, 0.f }, { 0.f, 1.f, 0.f });
 	m_CameraController = std::make_unique<CameraController>(m_Camera, Math::Vector3(Math::kYUnitVector));
 	m_CameraController->SetMovementSpeed(50.f);
 
-	m_Stone.Initialize("./Stone.glb");
+	m_Gltf.Initialize();
+
+	m_Model = ModelReader().Load("./Stone.glb");
+
+	std::mt19937 gen(42);
+	std::uniform_real_distribution<float> dis(-10.0, 10.0);
+	for (int i = 0; i < 100; ++i) {
+		m_Transformations.emplace_back(Math::OrthogonalTransform::MakeTranslation({dis(gen), dis(gen), dis(gen)}));
+	}
+
+	m_SimpleLights.insert(m_SimpleLights.end(), {
+		SimpleLight{ XMFLOAT3{ 1.f, 1.f, 1.f }, 20.f, XMFLOAT3{}, 40.f, XMFLOAT3{ 10.f, 10.f, 10.f }, 0 },
+		SimpleLight{ XMFLOAT3{ 0.5f, 0.5f, 1.f }, 20.f, XMFLOAT3{}, 40.f, XMFLOAT3{ -10.f, 10.f, 10.f }, 0 },
+		SimpleLight{ XMFLOAT3{ 1.f, 0.5f, 0.5f }, 20.f, XMFLOAT3{}, 40.f, XMFLOAT3{ 10.f, -10.f, 10.f }, 0 },
+		SimpleLight{ XMFLOAT3{ 0.1f, 0.1f, 0.1f }, 20.f, XMFLOAT3{}, 40.f, XMFLOAT3{ 10.f, -10.f, -10.f }, 0 }
+	});
 }
 
 void Alfheim::Update([[maybe_unused]] float deltaT)
@@ -55,7 +77,7 @@ void Alfheim::RenderScene(void)
 
 	gfxContext.SetRenderTarget(Graphics::g_SceneColorBuffer.GetRTV(), Graphics::g_SceneDepthBuffer.GetDSV());
 
-	m_Stone.Render(gfxContext, m_Camera);
+	m_Gltf.Render(gfxContext, m_Camera, m_SimpleLights, m_Model, m_Transformations);
 
 	gfxContext.Finish();
 }
