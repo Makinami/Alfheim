@@ -8,11 +8,13 @@ namespace Graphics
 	SamplerDesc SamplerAnisoWrapDesc;
 	SamplerDesc SamplerLinearClampDesc;
 	SamplerDesc SamplerPointClampDesc;
+	SamplerDesc SamplerAnisoClampDesc;
 
 	D3D12_CPU_DESCRIPTOR_HANDLE SamplerLinearWrap;
 	D3D12_CPU_DESCRIPTOR_HANDLE SamplerAnisoWrap;
 	D3D12_CPU_DESCRIPTOR_HANDLE SamplerLinearClamp;
 	D3D12_CPU_DESCRIPTOR_HANDLE SamplerPointClamp;
+	D3D12_CPU_DESCRIPTOR_HANDLE SamplerAnisoClamp;
 
 	D3D12_RASTERIZER_DESC RasterizerDefault;
 	D3D12_RASTERIZER_DESC RasterizerTwoSided;
@@ -36,6 +38,10 @@ void Graphics::InitializeCommonState(void)
 
 	SamplerAnisoWrapDesc.MaxAnisotropy = 4;
 	SamplerAnisoWrap = SamplerAnisoWrapDesc.CreateDescriptor();
+
+	SamplerAnisoClampDesc.MaxAnisotropy = 4;
+	SamplerAnisoClampDesc.SetTextureAddressMode(D3D12_TEXTURE_ADDRESS_MODE_CLAMP);
+	SamplerAnisoClamp = SamplerAnisoClampDesc.CreateDescriptor();
 
 	SamplerLinearClampDesc.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
 	SamplerLinearClampDesc.SetTextureAddressMode(D3D12_TEXTURE_ADDRESS_MODE_CLAMP);

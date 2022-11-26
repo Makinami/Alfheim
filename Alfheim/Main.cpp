@@ -10,6 +10,7 @@
 #include "PrimitiveRenderer.h"
 #include "GltfRenderer.h"
 #include "Model.h"
+#include "Terrain.h"
 
 using namespace GameCore;
 
@@ -33,6 +34,8 @@ private:
 	Model m_Model;
 	std::vector<Math::Matrix4> m_Transformations;
 	std::vector<SimpleLight> m_SimpleLights;
+	
+	Terrain m_Terrain;
 };
 
 CREATE_APPLICATION( Alfheim )
@@ -60,13 +63,16 @@ void Alfheim::Startup(void)
 		SimpleLight{ XMFLOAT3{ 1.f, 0.5f, 0.5f }, 20.f, XMFLOAT3{}, 40.f, XMFLOAT3{ 10.f, -10.f, 10.f }, 0 },
 		SimpleLight{ XMFLOAT3{ 0.1f, 0.1f, 0.1f }, 20.f, XMFLOAT3{}, 40.f, XMFLOAT3{ 10.f, -10.f, -10.f }, 0 }
 	});
-
+	
 	m_PrimitiveRenderer.Initialize();
+	m_Terrain.Initialize();
 }
 
 void Alfheim::Update([[maybe_unused]] float deltaT)
 {
 	m_CameraController->Update(deltaT);
+
+	m_Terrain.Update(deltaT);
 }
 
 void Alfheim::RenderScene(void)
@@ -80,7 +86,7 @@ void Alfheim::RenderScene(void)
 
 	gfxContext.SetRenderTarget(Graphics::g_SceneColorBuffer.GetRTV(), Graphics::g_SceneDepthBuffer.GetDSV());
 
-	m_Gltf.Render(gfxContext, m_Camera, m_SimpleLights, m_Model, m_Transformations);
+	m_Terrain.Render(gfxContext, m_Camera);
 
 	m_PrimitiveRenderer.Render(gfxContext, m_Camera);
 
