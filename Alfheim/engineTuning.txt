@@ -1,6 +1,6 @@
    Display Frame Rate:  on
    Display Performace Graph:  on
-   Display Profiler:  on
+   Display Profiler:  off
    + Graphics ...
         + Display ...
              Bicubic Filter Weight:  -0.750000

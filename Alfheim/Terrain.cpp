@@ -8,10 +8,60 @@
 #include "CompiledShaders/TerrainVS.h"
 #include "CompiledShaders/TerrainPS.h"
 
+#pragma warning( push )
+#pragma warning( disable: 4100 )
+#include <noise/noise.h>
+#pragma warning( pop )
+
+#include "3rd-party/SimplexNoise/SimplexNoise.h"
+
 using namespace DirectX;
+
+namespace noise::module
+{
+	class Simplex : public Perlin
+	{
+	public:
+		Simplex() { SetOctaveCount(1); }
+
+		[[nodiscard]] double GetValue(double x, double y, double z) const noexcept override
+		{
+			double value = 0.0;
+			double curPersistence = 1.0;
+
+			x *= m_frequency;
+			y *= m_frequency;
+			z *= m_frequency;
+
+			for (int curOctave = 0; curOctave < m_octaveCount; curOctave++)
+			{
+				const auto signal = SimplexNoise::noise(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
+				value += signal * curPersistence;
+
+				// Prepare the next octave.
+				x *= m_lacunarity;
+				y *= m_lacunarity;
+				z *= m_lacunarity;
+				curPersistence *= m_persistence;
+			}
+
+			return value;
+		}
+	};
+
+	class Sinus : public Module
+	{
+	public:
+		Sinus() : Module(GetSourceModuleCount()) {}
+		int GetSourceModuleCount() const { return 0; }
+		double GetValue(double x, double y, double z) const { (y); (z); return sin(x); }
+	};
+}
 
 auto GeneratePlaneGrid(int x, int y) -> std::pair<std::vector<XMFLOAT2>, std::vector<int>>
 {
+	ASSERT(x >= 0 && y >= 0);
+
 	++x; ++y;
 
 	auto vertices = std::vector<XMFLOAT2>(x * y);
@@ -27,8 +77,8 @@ auto GeneratePlaneGrid(int x, int y) -> std::pair<std::vector<XMFLOAT2>, std::ve
 			indices.emplace_back(i + (j + 1) * x);
 			indices.emplace_back((i + 1) + (j + 1) * x);
 			indices.emplace_back((i + 1) + j * x);
-			indices.emplace_back((i + 1) + j * x);
 			indices.emplace_back(i + (j + 1) * x);
+			indices.emplace_back((i + 1) + j * x);
 			indices.emplace_back(i + j * x);
 		}
 
@@ -37,15 +87,29 @@ auto GeneratePlaneGrid(int x, int y) -> std::pair<std::vector<XMFLOAT2>, std::ve
 
 void Terrain::Initialize()
 {
+	noise::module::Simplex noise;
+	noise.SetFrequency(1./128.);
+	noise.SetOctaveCount(6);
+	noise.SetPersistence(0.25);
+
 	// When using RGB, actual RowPitch got in d3dx12.h:1978 pDevice->GetCopyableFootprints
 	// is different from the one calculated by the abstraction. Could be worked around,
 	// but for now easier to switch to RGBA which always works.
 	// (probably because of the row memory alligment requirements)
-	std::vector<XMFLOAT4> heightMapData(101 * 101);
-	for (int x = 0; x < 101; ++x)
-		for (int y = 0; y < 101; ++y)
-			heightMapData[x * 101 + y] = XMFLOAT4{ 0, static_cast<float>(sin(x) + cos(y)), 0, 0 };
-	m_HeightMap.Create(101, 101, DXGI_FORMAT_R32G32B32A32_FLOAT, heightMapData.data());
+	std::vector<XMFLOAT4> heightMapData(m_Size * m_Size);
+	const auto verticalScale = 25.f;
+	for (int x = 0; x < m_Size; ++x)
+	{
+		for (int y = 0; y < m_Size; ++y)
+		{
+			heightMapData[x * m_Size + y] = XMFLOAT4{ 
+				static_cast<float>(noise.GetValue(x, y, 0) * verticalScale), // value
+				static_cast<float>((noise.GetValue(x + 0.5, y, 0) - noise.GetValue(x - 0.5, y, 0)) * verticalScale), // dx
+				static_cast<float>((noise.GetValue(x, y + 0.5, 0) - noise.GetValue(x, y - 0.5, 0)) * verticalScale), // dy
+				0 };
+		}
+	}
+	m_HeightMap.Create(m_Size, m_Size, DXGI_FORMAT_R32G32B32A32_FLOAT, heightMapData.data());
 
 	D3D12_INPUT_ELEMENT_DESC InputLayout[] =
 	{
@@ -64,14 +128,14 @@ void Terrain::Initialize()
 	m_RenderPSO.SetInputLayout(_countof(InputLayout), InputLayout);
 	m_RenderPSO.SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
 	m_RenderPSO.SetVertexShader(g_pTerrainVS, sizeof(g_pTerrainVS));
-	m_RenderPSO.SetRasterizerState(Graphics::RasterizerWireframe);
+	m_RenderPSO.SetRasterizerState(Graphics::RasterizerDefault);
 	m_RenderPSO.SetDepthStencilState(Graphics::DepthStateReadWrite);
 	m_RenderPSO.SetPixelShader(g_pTerrainPS, sizeof(g_pTerrainPS));
 	m_RenderPSO.SetBlendState(Graphics::BlendDisable);
 	m_RenderPSO.SetRenderTargetFormat(Graphics::g_SceneColorBuffer.GetFormat(), Graphics::g_SceneDepthBuffer.GetFormat());
 	m_RenderPSO.Finalize();
 
-	auto [vertices, indices] = GeneratePlaneGrid(101, 101);
+	auto [vertices, indices] = GeneratePlaneGrid(m_Size, m_Size);
 	m_VertexBuffer.Create(L"Terrain vertex buffer", vertices.size(), sizeof(vertices[0]), vertices.data());
 	m_IndexBuffer.Create(L"Terrain index buffer", indices.size(), sizeof(indices[0]), indices.data());
 }
@@ -96,7 +160,7 @@ void Terrain::Render(GraphicsContext& gfxContext, const Math::Camera& camera)
 		XMFLOAT4X4 viewProjectionMatrix;
 	} renderConstants;
 
-	renderConstants.inverseGridSize = XMFLOAT4{ 1.f / 100, 0, 0, 0 };
+	renderConstants.inverseGridSize = XMFLOAT4{ 1.f / m_Size, 0, 0, 0 };
 	XMStoreFloat4x4(&renderConstants.viewProjectionMatrix, camera.GetViewProjMatrix());
 
 	gfxContext.SetDynamicConstantBufferView(0, sizeof(renderConstants), &renderConstants);

@@ -16,6 +16,12 @@
     <Filter Include="Shaders">
       <UniqueIdentifier>{b54b782c-4638-4444-b65e-1d22280545b3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="3rd-party">
+      <UniqueIdentifier>{dc62e90f-b786-4596-862d-052f8d10c419}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rd-party\SimplexNoise">
+      <UniqueIdentifier>{8a9dfa9f-5f98-4c89-9296-3bd17801b13c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -35,6 +41,9 @@
     </ClCompile>
     <ClCompile Include="Terrain.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="3rd-party\SimplexNoise\SimplexNoise.cpp">
+      <Filter>3rd-party\SimplexNoise</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -62,6 +71,9 @@
     </ClInclude>
     <ClInclude Include="Terrain.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="3rd-party\SimplexNoise\SimplexNoise.h">
+      <Filter>3rd-party\SimplexNoise</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

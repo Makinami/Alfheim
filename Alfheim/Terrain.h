@@ -24,4 +24,6 @@ private:
 	GraphicsPSO m_RenderPSO;
 
 	Texture m_HeightMap;
+
+	int m_Size = 1024;
 };

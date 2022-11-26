@@ -42,7 +42,7 @@ CREATE_APPLICATION( Alfheim )
 
 void Alfheim::Startup(void)
 {
-	m_Camera.SetEyeAtUp({ 5.f, 0.f, 0.f }, { 0.f, 0.f, 0.f }, { 0.f, 1.f, 0.f });
+	m_Camera.SetEyeAtUp({ 512.f, 50.f, 512.f }, { 0.f, 0.f, 0.f }, { 0.f, 1.f, 0.f });
 	m_Camera.Update();
 	m_CameraController = std::make_unique<CameraController>(m_Camera, Math::Vector3(Math::kYUnitVector));
 	m_CameraController->SetMovementSpeed(50.f);
