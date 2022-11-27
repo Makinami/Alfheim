@@ -2,13 +2,13 @@
 
 struct InstanceData
 {
+	float4 color;
 	float4x4 world;
 };
 
 struct VertexData
 {
 	float3 position;
-	float3 normal;
 };
 
 StructuredBuffer<VertexData> VertexBuffer : register(t0);
@@ -22,7 +22,7 @@ cbuffer VSConstants : register(b0)
 struct VSInput
 {
 	float3 position : POSITION;
-	float3 normal : NORMAL;
+	float4 color : COLOR;
 	float4x4 world : WORLD;
 	//uint vertexId : SV_VertexID;
 	//uint instanceId : SV_InstanceID;
@@ -30,8 +30,8 @@ struct VSInput
 
 struct VSOutput
 {
+	float4 color : COLOR;
 	float4 position : SV_POSITION;
-	float3 normal : NORMAL;
 	float3 worldPos : POSITION;
 };
 
@@ -46,7 +46,7 @@ VSOutput main(VSInput vin)
 
 	vout.worldPos = mul(vin.world, float4(vin.position, 1.0f));
 	vout.position = mul(viewProj, float4(vout.worldPos, 1.0f));
-	vout.normal = vin.normal;
+	vout.color = vin.color;
 
 	return vout;
 }

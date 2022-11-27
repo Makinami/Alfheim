@@ -40,6 +40,7 @@ CREATE_APPLICATION( Alfheim )
 void Alfheim::Startup(void)
 {
 	m_Camera.SetEyeAtUp({ 5.f, 0.f, 0.f }, { 0.f, 0.f, 0.f }, { 0.f, 1.f, 0.f });
+	m_Camera.Update();
 	m_CameraController = std::make_unique<CameraController>(m_Camera, Math::Vector3(Math::kYUnitVector));
 	m_CameraController->SetMovementSpeed(50.f);
 
@@ -59,6 +60,8 @@ void Alfheim::Startup(void)
 		SimpleLight{ XMFLOAT3{ 1.f, 0.5f, 0.5f }, 20.f, XMFLOAT3{}, 40.f, XMFLOAT3{ 10.f, -10.f, 10.f }, 0 },
 		SimpleLight{ XMFLOAT3{ 0.1f, 0.1f, 0.1f }, 20.f, XMFLOAT3{}, 40.f, XMFLOAT3{ 10.f, -10.f, -10.f }, 0 }
 	});
+
+	m_PrimitiveRenderer.Initialize();
 }
 
 void Alfheim::Update([[maybe_unused]] float deltaT)
@@ -78,6 +81,8 @@ void Alfheim::RenderScene(void)
 	gfxContext.SetRenderTarget(Graphics::g_SceneColorBuffer.GetRTV(), Graphics::g_SceneDepthBuffer.GetDSV());
 
 	m_Gltf.Render(gfxContext, m_Camera, m_SimpleLights, m_Model, m_Transformations);
+
+	m_PrimitiveRenderer.Render(gfxContext, m_Camera);
 
 	gfxContext.Finish();
 }
