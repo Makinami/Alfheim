@@ -8,8 +8,8 @@
 #include <BufferManager.h>
 #include <SamplerManager.h>
 
-#include "CompiledShaders/PrimitiveVS.h"
-#include "CompiledShaders/PrimitivePS.h"
+#include "CompiledShaders/GltfVS.h"
+#include "CompiledShaders/GltfPS.h"
 
 using namespace Math;
 
@@ -50,8 +50,8 @@ void GltfRenderer::Initialize()
 	m_SurfacePSO.SetRenderTargetFormats(1, &Graphics::g_SceneColorBuffer.GetFormat(), Graphics::g_SceneDepthBuffer.GetFormat());
 	m_SurfacePSO.SetInputLayout(_countof(InputLayout), InputLayout);
 	m_SurfacePSO.SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
-	m_SurfacePSO.SetVertexShader(g_pPrimitiveVS, sizeof(g_pPrimitiveVS));
-	m_SurfacePSO.SetPixelShader(g_pPrimitivePS, sizeof(g_pPrimitivePS));
+	m_SurfacePSO.SetVertexShader(g_pGltfVS, sizeof(g_pGltfVS));
+	m_SurfacePSO.SetPixelShader(g_pGltfPS, sizeof(g_pGltfPS));
 	m_SurfacePSO.Finalize();
 
 	m_WireframePSO = m_SurfacePSO;

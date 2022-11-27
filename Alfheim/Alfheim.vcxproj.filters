@@ -40,6 +40,9 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="vcpkg.json" />
+    <None Include="Shaders\GltfRS.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PrimitiveRenderer.h">
@@ -60,6 +63,12 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\PrimitivePS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\GltfPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\GltfVS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
