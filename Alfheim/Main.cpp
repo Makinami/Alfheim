@@ -31,14 +31,16 @@ CREATE_APPLICATION( Alfheim )
 void Alfheim::Startup(void)
 {
 	m_Camera.SetEyeAtUp({ 10.f, 0.f, 0.f }, { 0.f, 0.f, 0.f }, { 0.f, 1.f, 0.f });
+	m_Camera.Update();
 	m_CameraController = std::make_unique<CameraController>(m_Camera, Math::Vector3(Math::kYUnitVector));
 	m_CameraController->SetMovementSpeed(50.f);
 
 	m_PrimitiveRenderer.Initialize();
 
-	m_PrimitiveRenderer.QueuePlane({ -2, -1, -2 }, { 4, 0, 0 }, { 0, 0, 4 });
-	m_PrimitiveRenderer.QueueCuboid({ -1,-1,-1 }, { 1,0,1 });
-	m_PrimitiveRenderer.QueueSphere({ 0, 1, 0 }, 1.f);
+	m_PrimitiveRenderer.QueuePlane({ -2, -1, -2 }, { 4, 0, 0 }, { 0, 0, 4 }, Color{0.f, 1.f, 0.f});
+	m_PrimitiveRenderer.QueueCuboid({ -1,-1,-1 }, { 1,0,1 }, Color{0.5f, 0.5f, 0.5f});
+	m_PrimitiveRenderer.QueueSphere({ 0, 1, 0 }, 1.f, Color{0.f, 0.f, 1.f});
+	m_PrimitiveRenderer.QueueFrustum(m_Camera.GetWorldSpaceFrustum(), Color{1.f, 0.f, 0.f});
 }
 
 void Alfheim::Update([[maybe_unused]] float deltaT)

@@ -21,7 +21,6 @@ namespace {
 struct VertexData
 {
 	XMFLOAT3 Position;
-	XMFLOAT3 Normal;
 };
 
 namespace DirectX
@@ -48,7 +47,7 @@ auto append_unique(Container& container, const Value& value) -> typename Contain
 
 // Generate sphere by bisecting icosahedron `lod` time.
 // Returns icosahedron by default
-[[nodiscard]] constexpr auto GenerateSphereMesh(int lod = 0) -> std::pair<std::vector<VertexData>, std::vector<int>>
+[[nodiscard]] constexpr auto GenerateSphereMesh(int lod = 0) -> std::pair<std::vector<XMFLOAT3>, std::vector<int>>
 {
 	using namespace Math;
 
@@ -56,19 +55,19 @@ auto append_unique(Container& container, const Value& value) -> typename Contain
 	const float Z = 0.850651f;
 
 	auto vertices = std::vector{
-		XMFLOAT3(-X, 0.0f, Z),  XMFLOAT3(X, 0.0f, Z),
-		XMFLOAT3(-X, 0.0f, -Z), XMFLOAT3(X, 0.0f, -Z),
-		XMFLOAT3(0.0f, Z, X),   XMFLOAT3(0.0f, Z, -X),
-		XMFLOAT3(0.0f, -Z, X),  XMFLOAT3(0.0f, -Z, -X),
-		XMFLOAT3(Z, X, 0.0f),   XMFLOAT3(-Z, X, 0.0f),
-		XMFLOAT3(Z, -X, 0.0f),  XMFLOAT3(-Z, -X, 0.0f)
+		XMFLOAT3{-X, 0.0f, Z},  XMFLOAT3{X, 0.0f, Z},
+		XMFLOAT3{-X, 0.0f, -Z}, XMFLOAT3{X, 0.0f, -Z},
+		XMFLOAT3{0.0f, Z, X},   XMFLOAT3{0.0f, Z, -X},
+		XMFLOAT3{0.0f, -Z, X},  XMFLOAT3{0.0f, -Z, -X},
+		XMFLOAT3{Z, X, 0.0f},   XMFLOAT3{-Z, X, 0.0f},
+		XMFLOAT3{Z, -X, 0.0f},  XMFLOAT3{-Z, -X, 0.0f},
 	};
 
 	auto indices = std::vector{
 		1,4,0,  4,9,0,  4,5,9,  8,5,4,  1,8,4,
 		1,10,8, 10,3,8, 8,3,5,  3,2,5,  3,7,2,
 		3,10,7, 10,6,7, 6,11,7, 6,0,11, 6,1,0,
-		10,1,6, 11,0,9, 2,11,9, 5,2,9,  11,2,7
+		10,1,6, 11,0,9, 2,11,9, 5,2,9,  11,2,7,
 	};
 
 	auto normalize = [](const XMFLOAT3& V) {
@@ -123,49 +122,42 @@ auto append_unique(Container& container, const Value& value) -> typename Contain
 		}
 	}
 
-	auto vertexData = std::vector<VertexData>{};
-	vertexData.reserve(vertices.size());
-
-	std::transform(vertices.begin(), vertices.end(), std::back_inserter(vertexData), [&](const XMFLOAT3& vertex) {
-		return VertexData{ vertex, normalize(vertex) };
-	});
-
-	return { vertexData, indices };
+	return { vertices, indices };
 }
 
 // outward facing cube
-[[nodiscard]] constexpr auto GenerateCubeMesh() -> std::pair<std::vector<VertexData>, std::vector<int>>
+[[nodiscard]] constexpr auto GenerateCubeMesh() -> std::pair<std::vector<XMFLOAT3>, std::vector<int>>
 {
 	auto vertices = std::vector{
-		VertexData{ XMFLOAT3(0, 0, 0), XMFLOAT3(-1, 0, 0) },
-		VertexData{ XMFLOAT3(0, 1, 0), XMFLOAT3(-1, 0, 0) },
-		VertexData{ XMFLOAT3(0, 0, 1), XMFLOAT3(-1, 0, 0) },
-		VertexData{ XMFLOAT3(0, 1, 1), XMFLOAT3(-1, 0, 0) },
+		XMFLOAT3{0, 0, 0},
+		XMFLOAT3{0, 1, 0},
+		XMFLOAT3{0, 0, 1},
+		XMFLOAT3{0, 1, 1},
 
-		VertexData{ XMFLOAT3(1, 0, 0), XMFLOAT3(1, 0, 0) },
-		VertexData{ XMFLOAT3(1, 1, 0), XMFLOAT3(1, 0, 0) },
-		VertexData{ XMFLOAT3(1, 0, 1), XMFLOAT3(1, 0, 0) },
-		VertexData{ XMFLOAT3(1, 1, 1), XMFLOAT3(1, 0, 0) },
+		XMFLOAT3{1, 0, 0},
+		XMFLOAT3{1, 1, 0},
+		XMFLOAT3{1, 0, 1},
+		XMFLOAT3{1, 1, 1},
 
-		VertexData{ XMFLOAT3(0, 0, 0), XMFLOAT3(0, -1, 0) },
-		VertexData{ XMFLOAT3(1, 0, 0), XMFLOAT3(0, -1, 0) },
-		VertexData{ XMFLOAT3(0, 0, 1), XMFLOAT3(0, -1, 0) },
-		VertexData{ XMFLOAT3(1, 0, 1), XMFLOAT3(0, -1, 0) },
+		XMFLOAT3{0, 0, 0},
+		XMFLOAT3{1, 0, 0},
+		XMFLOAT3{0, 0, 1},
+		XMFLOAT3{1, 0, 1},
 
-		VertexData{ XMFLOAT3(0, 1, 0), XMFLOAT3(0, 1, 0) },
-		VertexData{ XMFLOAT3(1, 1, 0), XMFLOAT3(0, 1, 0) },
-		VertexData{ XMFLOAT3(0, 1, 1), XMFLOAT3(0, 1, 0) },
-		VertexData{ XMFLOAT3(1, 1, 1), XMFLOAT3(0, 1, 0) },
+		XMFLOAT3{0, 1, 0},
+		XMFLOAT3{1, 1, 0},
+		XMFLOAT3{0, 1, 1},
+		XMFLOAT3{1, 1, 1},
 
-		VertexData{ XMFLOAT3(0, 0, 0), XMFLOAT3(0, 0, -1) },
-		VertexData{ XMFLOAT3(1, 0, 0), XMFLOAT3(0, 0, -1) },
-		VertexData{ XMFLOAT3(0, 1, 0), XMFLOAT3(0, 0, -1) },
-		VertexData{ XMFLOAT3(1, 1, 0), XMFLOAT3(0, 0, -1) },
+		XMFLOAT3{0, 0, 0},
+		XMFLOAT3{1, 0, 0},
+		XMFLOAT3{0, 1, 0},
+		XMFLOAT3{1, 1, 0},
 
-		VertexData{ XMFLOAT3(0, 0, 1), XMFLOAT3(0, 0, 1) },
-		VertexData{ XMFLOAT3(1, 0, 1), XMFLOAT3(0, 0, 1) },
-		VertexData{ XMFLOAT3(0, 1, 1), XMFLOAT3(0, 0, 1) },
-		VertexData{ XMFLOAT3(1, 1, 1), XMFLOAT3(0, 0, 1) }
+		XMFLOAT3(0, 0, 1),
+		XMFLOAT3(1, 0, 1),
+		XMFLOAT3(0, 1, 1),
+		XMFLOAT3(1, 1, 1),
 	};
 
 	auto indices = std::vector{
@@ -174,23 +166,23 @@ auto append_unique(Container& container, const Value& value) -> typename Contain
 		8, 9, 10,  9, 11, 10,
 		12, 14, 13,  13, 14, 15,
 		16, 18, 17,  17, 18, 19,
-		20, 21, 22,  21, 23, 22
+		20, 21, 22,  21, 23, 22,
 	};
 
 	return { vertices, indices };
 }
 
 // Generate XY plane facing positice Z direction
-[[nodiscard]] constexpr auto GeneratePlaneMesh() -> std::pair<std::vector<VertexData>, std::vector<int>>
+[[nodiscard]] constexpr auto GeneratePlaneMesh() -> std::pair<std::vector<XMFLOAT3>, std::vector<int>>
 {
 	return {
 		{
-			VertexData{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},
-			VertexData{{1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},
-			VertexData{{0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},
-			VertexData{{1.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}}
+			{0.0f, 0.0f, 0.0f},
+			{1.0f, 0.0f, 0.0f},
+			{0.0f, 1.0f, 0.0f},
+			{1.0f, 1.0f, 0.0f},
 		},
-		{ 0, 2, 1,  1, 2, 3 }
+		{ 0, 2, 1,  1, 2, 3 },
 	};
 }
 
@@ -205,32 +197,35 @@ void PrimitiveRenderer::Initialize()
 	D3D12_INPUT_ELEMENT_DESC InputLayout[] =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT,    0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 		{ "WORLD",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 		{ "WORLD",    1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 		{ "WORLD",    2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-		{ "WORLD",    3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 }
+		{ "WORLD",    3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 	};
 
-	m_SurfacePSO.SetRootSignature(m_RootSig);
-	m_SurfacePSO.SetBlendState(Graphics::BlendDisable);
-	m_SurfacePSO.SetRasterizerState(Graphics::RasterizerDefault);
-	m_SurfacePSO.SetDepthStencilState(Graphics::DepthStateReadWrite);
-	m_SurfacePSO.SetRenderTargetFormats(1, &Graphics::g_SceneColorBuffer.GetFormat(), Graphics::g_SceneDepthBuffer.GetFormat());
-	m_SurfacePSO.SetInputLayout(_countof(InputLayout), InputLayout);
-	m_SurfacePSO.SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
-	m_SurfacePSO.SetVertexShader(g_pPrimitiveVS, sizeof(g_pPrimitiveVS));
-	m_SurfacePSO.SetPixelShader(g_pPrimitivePS, sizeof(g_pPrimitivePS));
-	m_SurfacePSO.Finalize();
-
-	m_WireframePSO = m_SurfacePSO;
+	m_WireframePSO.SetRootSignature(m_RootSig);
+	m_WireframePSO.SetBlendState(Graphics::BlendDisable);
 	m_WireframePSO.SetRasterizerState(Graphics::RasterizerWireframe);
+	m_WireframePSO.SetDepthStencilState(Graphics::DepthStateReadWrite);
+	m_WireframePSO.SetRenderTargetFormats(1, &Graphics::g_SceneColorBuffer.GetFormat(), Graphics::g_SceneDepthBuffer.GetFormat());
+	m_WireframePSO.SetInputLayout(_countof(InputLayout), InputLayout);
+	m_WireframePSO.SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
+	m_WireframePSO.SetVertexShader(g_pPrimitiveVS, sizeof(g_pPrimitiveVS));
+	m_WireframePSO.SetPixelShader(g_pPrimitivePS, sizeof(g_pPrimitivePS));
 	m_WireframePSO.Finalize();
 
-	MeshBufferPacker<VertexData> packer;
+	MeshBufferPacker<XMFLOAT3> packer;
 	m_PrimitivesIndices[0] = packer.Push(GenerateSphereMesh(1));
 	m_PrimitivesIndices[1] = packer.Push(GenerateCubeMesh());
 	m_PrimitivesIndices[2] = packer.Push(GeneratePlaneMesh());
+	// Representing line as a degenerate triangle (allows to keep the rest of the logic the same)
+	m_PrimitivesIndices[3] = packer.Push(std::pair{
+		std::vector{
+			XMFLOAT3{0.0f, 0.0f, 0.0f},
+			XMFLOAT3{1.0f, 1.0f, 1.0f},
+			XMFLOAT3{1.0f, 1.0f, 1.0f},
+		}, std::vector{0, 1, 1} });
 	packer.Finalize(L"Primitives", m_VertexBuffer, m_IndexBuffer);
 
 	m_InstanceBuffer.Create(L"Sphere instance buffer", max_instances);
@@ -246,10 +241,10 @@ void PrimitiveRenderer::Render(GraphicsContext& gfxContext, const Math::Camera& 
 	gfxContext.SetRootSignature(m_RootSig);
 	gfxContext.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	gfxContext.SetIndexBuffer(m_IndexBuffer.IndexBufferView());
-	gfxContext.TransitionResource(m_VertexBuffer, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	gfxContext.TransitionResource(m_VertexBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 	gfxContext.SetVertexBuffer(0, m_VertexBuffer.VertexBufferView());
 
-	gfxContext.SetPipelineState(m_SurfacePSO);
+	gfxContext.SetPipelineState(m_WireframePSO);
 	gfxContext.SetViewportAndScissor(0, 0, Graphics::g_SceneColorBuffer.GetWidth(), Graphics::g_SceneColorBuffer.GetHeight());
 
 	__declspec(align(16)) struct {

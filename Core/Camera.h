@@ -9,7 +9,7 @@ namespace Math
 	{
 	public:
 		// Cal this function once per frame and after you've changed any state. This
-		// regenerates all amtrices. Calling it more or less than once per frame will break
+		// regenerates all matrices. Calling it more or less than once per frame will break
 		// temporal effects and cause unpredictable results.
 		void Update();
 
