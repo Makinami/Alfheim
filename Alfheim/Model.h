@@ -69,6 +69,7 @@ public:
 	};
 	struct Mesh {
 		std::vector<Primitive> m_Primitives;
+		Math::BoundingSphere m_BoundingSphere;
 		// Missing weights
 	};
 	struct Node {
@@ -80,6 +81,11 @@ public:
 		int m_MeshId = -1;
 		// Ignore skin,, weights, camera
 	};
+	struct Scene {
+		std::string m_Name;
+		std::vector<int> m_Nodes;
+		Math::BoundingSphere m_BoundingSphere;
+	};
 
 	std::vector<ByteAddressBuffer> m_Buffers;
 	std::vector<Texture> m_Textures;
@@ -87,5 +93,6 @@ public:
 	StructuredBuffer m_Materials;
 	std::vector<Mesh> m_Meshes;
 	std::vector<Node> m_Nodes;
+	std::vector<Scene> m_Scenes;
 };
 

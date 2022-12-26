@@ -158,7 +158,7 @@ MaterialInfo getSpecularGlossinessInfo(Material material, MaterialInfo info, VSO
 	return info;
 }
 
-float3 F_Schlick(float3 f0, float f90, float VdotH)
+float3 F_Schlick(float3 f0, float3 f90, float VdotH)
 {
 	float x = saturate(1.f - VdotH);
 	float x2 = x * x;

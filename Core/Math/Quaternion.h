@@ -41,5 +41,4 @@ namespace Math
     protected:
         XMVECTOR m_vec;
     };
-
 }

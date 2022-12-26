@@ -2,6 +2,7 @@
 
 #include "BoundingPlane.h"
 #include "BoundingSphere.h"
+#include "BoundingBox.h"
 
 namespace Math
 {
@@ -32,8 +33,7 @@ namespace Math
         
         // We don't officially have BoundingBox class yet, but let's assume it's forthcoming. (There is a 
         // simple struct in the Model project.)
-        // TODO
-        bool IntersectBoundingBox(const Vector3 minBound, const Vector3 maxBound) const;
+        bool IntersectBoundingBox(const AxisAlignedBox& aabb) const;
 
 		friend Frustum  operator* (const OrthogonalTransform& xform, const Frustum& frustum);    // Fast
 		friend Frustum  operator* (const AffineTransform& xform, const Frustum& frustum);        // Slow
@@ -60,11 +60,11 @@ namespace Math
         return true;
     }
 
-    inline bool Frustum::IntersectBoundingBox(const Vector3 minBound, const Vector3 maxBound) const
+    inline bool Frustum::IntersectBoundingBox(const AxisAlignedBox& aabb) const
     {
         for (auto plane : m_FrustumPlanes)
         {
-            auto farCorner = Select(minBound, maxBound, plane.GetNormal() > Vector3(kZero));
+            auto farCorner = Select(aabb.GetMin(), aabb.GetMax(), plane.GetNormal() > Vector3(kZero));
             if (plane.DistanceFromPoint(farCorner) < 0.0f)
                 return false;
         }

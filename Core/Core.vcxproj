@@ -140,6 +140,7 @@
     <ClInclude Include="GraphRenderer.h" />
     <ClInclude Include="Hash.h" />
     <ClInclude Include="LinearAllocator.h" />
+    <ClInclude Include="Math\BoundingBox.h" />
     <ClInclude Include="Math\BoundingPlane.h" />
     <ClInclude Include="Math\BoundingSphere.h" />
     <ClInclude Include="Math\Frustum.h" />
@@ -185,6 +186,9 @@
     <ClCompile Include="GraphicsCore.cpp" />
     <ClCompile Include="GraphRenderer.cpp" />
     <ClCompile Include="LinearAllocator.cpp" />
+    <ClCompile Include="Math\BoundingSphere.cpp">
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../pch.h</PrecompiledHeaderFile>
+    </ClCompile>
     <ClCompile Include="Math\Frustum.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../pch.h</PrecompiledHeaderFile>

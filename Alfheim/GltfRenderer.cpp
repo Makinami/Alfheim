@@ -121,8 +121,8 @@ void GltfRenderer::Render(GraphicsContext& gfxContext, const Math::Camera& camer
 	memcpy(&m_SimpleLightsBuffer[0], m_SimpleLights.data(), m_SimpleLights.size() * sizeof(m_SimpleLights[0]));
 	gfxContext.SetDynamicDescriptor(4, 1, m_SimpleLightsBuffer.GetSRV());
 
-	const auto& scene = model.scenes[model.defaultScene];
-	for (const auto& nodeId : scene.nodes)
+	const auto& scene = model.m_Scenes[model.defaultScene];
+	for (const auto& nodeId : scene.m_Nodes)
 	{
 		DrawNode(gfxContext, model, nodeId, Matrix4{kIdentity}, static_cast<int>(instanceData.size()));
 	}

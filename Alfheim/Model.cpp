@@ -1,9 +1,11 @@
 #include "pch.h"
 
 #include "Model.h"
+#include "Math/BoundingSphere.h"
 
 #include <tiny_gltf.h>
 #include <bitset>
+#include <numeric>
 
 [[nodiscard]] D3D12_TEXTURE_ADDRESS_MODE GetAddressMode(int wrap) noexcept
 {
@@ -82,6 +84,21 @@
 	return DXGI_FORMAT_UNKNOWN;
 }
 
+Math::BoundingSphere BuildNodeBoundingSphere(const Model& model, int nodeId)
+{
+	const auto& node = model.m_Nodes[nodeId];
+	if (node.m_MeshId != -1)
+	{
+		return model.m_Meshes[node.m_MeshId].m_BoundingSphere;
+	}
+	else
+	{
+		return std::reduce(node.m_Children.begin(), node.m_Children.end(), Math::BoundingSphere(), [&](const Math::BoundingSphere& sphere, int childId) {
+			return sphere.Union(BuildNodeBoundingSphere(model, childId));
+			});
+	}
+}
+
 Model ModelReader::Load(const std::filesystem::path filename)
 {
 	auto model = Model{};
@@ -134,6 +151,17 @@ Model ModelReader::Load(const std::filesystem::path filename)
 				primitive.m_IndexCount = accessor.count;
 			}
 			primitive.m_MaterialId = gltfPrimitive.material;
+
+			auto position = gltfPrimitive.attributes.find("POSITION");
+			if (position != gltfPrimitive.attributes.end()) {
+				auto accessor = model.accessors[position->second];
+				assert(accessor.minValues.size() == 3 && accessor.maxValues.size() == 3);
+				auto min = Math::Vector3(static_cast<float>(accessor.minValues[0]), static_cast<float>(accessor.minValues[1]), static_cast<float>(accessor.minValues[2]));
+				auto max = Math::Vector3(static_cast<float>(accessor.maxValues[0]), static_cast<float>(accessor.maxValues[1]), static_cast<float>(accessor.maxValues[2]));
+				auto primitiveSphere = Math::BoundingSphere((min + max) * 0.5f, (max - min).Length() * 0.5f);
+				newMesh.m_BoundingSphere = newMesh.m_BoundingSphere.Union(primitiveSphere);
+			}
+
 			return primitive;
 		});
 		return newMesh;
@@ -153,6 +181,7 @@ Model ModelReader::Load(const std::filesystem::path filename)
 		}
 		else
 		{
+			//TODO: rewrite into m_Transformation
 			if (gltfNode.scale.size() == 3)
 				node.m_Scale = Math::Vector3{ static_cast<float>(gltfNode.scale[0]), static_cast<float>(gltfNode.scale[1]), static_cast<float>(gltfNode.scale[2]) };
 
@@ -165,6 +194,19 @@ Model ModelReader::Load(const std::filesystem::path filename)
 		node.m_MeshId = gltfNode.mesh;
 		node.m_Children = std::move(gltfNode.children);
 		return node;
+	});
+
+	model.m_Scenes.reserve(model.scenes.size());
+	std::ranges::transform(model.scenes, std::back_inserter(model.m_Scenes), [&](const auto& gltfScene) {
+		auto scene = Model::Scene{};
+		scene.m_Name = gltfScene.name;
+		scene.m_Nodes = gltfScene.nodes;
+		
+		scene.m_BoundingSphere = std::reduce(scene.m_Nodes.begin(), scene.m_Nodes.end(), Math::BoundingSphere(), [&](const Math::BoundingSphere& sphere, int childId) {
+			return sphere.Union(BuildNodeBoundingSphere(model, childId));
+		});
+
+		return scene;
 	});
 
 	return model;
