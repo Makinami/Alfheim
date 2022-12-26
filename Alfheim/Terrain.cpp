@@ -1,12 +1,14 @@
 #include "pch.h"
 
-#include "GraphicsCommon.h"
-#include "SamplerManager.h"
-#include "BufferManager.h"
+#include <GraphicsCommon.h>
+#include <SamplerManager.h>
+#include <BufferManager.h>
 
 #include "Terrain.h"
 #include "CompiledShaders/TerrainVS.h"
 #include "CompiledShaders/TerrainPS.h"
+
+#include "GlobalSettings.h"
 
 #pragma warning( push )
 #pragma warning( disable: 4100 )
@@ -24,7 +26,7 @@ namespace noise::module
 	public:
 		Simplex() { SetOctaveCount(1); }
 
-		[[nodiscard]] double GetValue(double x, double y, double z) const noexcept override
+		[[nodiscard]] double GetValue(double x, double y, double z) const override
 		{
 			double value = 0.0;
 			double curPersistence = 1.0;
@@ -135,6 +137,10 @@ void Terrain::Initialize()
 	m_RenderPSO.SetRenderTargetFormat(Graphics::g_SceneColorBuffer.GetFormat(), Graphics::g_SceneDepthBuffer.GetFormat());
 	m_RenderPSO.Finalize();
 
+	m_WireframePSO = m_RenderPSO;
+	m_WireframePSO.SetRasterizerState(Graphics::RasterizerWireframe);
+	m_WireframePSO.Finalize();
+
 	auto [vertices, indices] = GeneratePlaneGrid(m_Size, m_Size);
 	m_VertexBuffer.Create(L"Terrain vertex buffer", vertices.size(), sizeof(vertices[0]), vertices.data());
 	m_IndexBuffer.Create(L"Terrain index buffer", indices.size(), sizeof(indices[0]), indices.data());
@@ -149,7 +155,11 @@ void Terrain::Render(GraphicsContext& gfxContext, const Math::Camera& camera)
 	gfxContext.SetIndexBuffer(m_IndexBuffer.IndexBufferView());
 	gfxContext.SetVertexBuffer(0, m_VertexBuffer.VertexBufferView());
 
-	gfxContext.SetPipelineState(m_RenderPSO);
+	switch (Settings::RasterizationMethod)
+	{
+	case Settings::RasterizationOptions::kNormal: gfxContext.SetPipelineState(m_RenderPSO); break;
+	case Settings::RasterizationOptions::kWireframe: gfxContext.SetPipelineState(m_WireframePSO); break;
+	}
 	gfxContext.SetViewportAndScissor(0, 0, Graphics::g_SceneColorBuffer.GetWidth(), Graphics::g_SceneColorBuffer.GetHeight());
 
 	gfxContext.SetDynamicDescriptor(1, 0, m_HeightMap.GetSRV());

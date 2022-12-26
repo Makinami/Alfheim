@@ -22,6 +22,7 @@ private:
 	RootSignature m_RootSig;
 
 	GraphicsPSO m_RenderPSO;
+	GraphicsPSO m_WireframePSO;
 
 	Texture m_HeightMap;
 

@@ -87,6 +87,7 @@ void Alfheim::RenderScene(void)
 	gfxContext.SetRenderTarget(Graphics::g_SceneColorBuffer.GetRTV(), Graphics::g_SceneDepthBuffer.GetDSV());
 
 	m_Terrain.Render(gfxContext, m_Camera);
+	m_Gltf.Render(gfxContext, m_Camera, m_SimpleLights, m_Model, m_Transformations);
 
 	m_PrimitiveRenderer.Render(gfxContext, m_Camera);
 

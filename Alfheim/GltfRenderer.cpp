@@ -8,18 +8,14 @@
 #include <BufferManager.h>
 #include <SamplerManager.h>
 
+#include "GlobalSettings.h"
+
 #include "CompiledShaders/GltfVS.h"
 #include "CompiledShaders/GltfPS.h"
 
 using namespace Math;
 
 using namespace DirectX;
-
-namespace {
-	enum PSOOptions { kNormal, kWireframe, kPSOCount };
-	const char* PSONames[] = { "Normal", "Wireframe" };
-	EnumVar PSOOption("Model PSO", PSOOptions::kNormal, PSOOptions::kPSOCount, PSONames);
-}
 
 void GltfRenderer::Initialize()
 {
@@ -79,10 +75,10 @@ void GltfRenderer::Render(GraphicsContext& gfxContext, const Math::Camera& camer
 	gfxContext.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	gfxContext.TransitionResource(model.m_Buffers[0], D3D12_RESOURCE_STATE_GENERIC_READ);
 
-	switch (PSOOption)
+	switch (Settings::RasterizationMethod)
 	{
-	case kNormal: gfxContext.SetPipelineState(m_SurfacePSO); break;
-	case kWireframe: gfxContext.SetPipelineState(m_WireframePSO); break;
+	case Settings::RasterizationOptions::kNormal: gfxContext.SetPipelineState(m_SurfacePSO); break;
+	case Settings::RasterizationOptions::kWireframe: gfxContext.SetPipelineState(m_WireframePSO); break;
 	}
 	gfxContext.SetViewportAndScissor(0, 0, Graphics::g_SceneColorBuffer.GetWidth(), Graphics::g_SceneColorBuffer.GetHeight());
 

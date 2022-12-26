@@ -45,6 +45,9 @@
     <ClCompile Include="3rd-party\SimplexNoise\SimplexNoise.cpp">
       <Filter>3rd-party\SimplexNoise</Filter>
     </ClCompile>
+    <ClCompile Include="GlobalSettings.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -74,6 +77,9 @@
     </ClInclude>
     <ClInclude Include="3rd-party\SimplexNoise\SimplexNoise.h">
       <Filter>3rd-party\SimplexNoise</Filter>
+    </ClInclude>
+    <ClInclude Include="GlobalSettings.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
